@@ -41,7 +41,7 @@ void FastMatrix4::CreateFromQuaternion(const FastQuaternion& q)
 	_rows[1] = result.r[1];
 	_rows[2] = result.r[2];
 	_rows[3] = result.r[3];
-	// Have to transpose b/c DirectXMath assumes column vectors
+	// Have to transpose b/c DirectXMath assumes row vectors
 	_MM_TRANSPOSE4_PS(_rows[0], _rows[1], _rows[2], _rows[3]);
 }
 
@@ -54,7 +54,8 @@ void FastMatrix4::CreateLookAt( const FastVector3& vEye, const FastVector3& vAt,
 	_rows[1] = result.r[1];
 	_rows[2] = result.r[2];
 	_rows[3] = result.r[3];
-	// Have to transpose b/c DirectXMath assumes column vectors
+
+	// Have to transpose b/c DirectXMath assumes row vectors
 	_MM_TRANSPOSE4_PS(_rows[0], _rows[1], _rows[2], _rows[3]);
 }
 
