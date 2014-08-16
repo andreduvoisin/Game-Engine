@@ -7,6 +7,7 @@
 #include <xmmintrin.h>
 #include <smmintrin.h>
 #include <cmath>
+#include <DirectXMath.h>
 
 // Define D3D Matrix here so we don't have to replicate
 #ifndef D3DMATRIX_DEFINED
@@ -25,20 +26,6 @@ typedef struct _D3DMATRIX {
 #define D3DMATRIX_DEFINED
 #endif
 
-#define FASTMATH_TRANSPOSE(row0, row1, row2, row3) {					\
-	__m128 tmp3, tmp2, tmp1, tmp0;										\
-																		\
-	tmp0   = _mm_shuffle_ps((row0), (row1), _MM_SHUFFLE(1, 0, 1, 0));	\
-	tmp2   = _mm_shuffle_ps((row0), (row1), _MM_SHUFFLE(3, 2, 3, 2));	\
-	tmp1   = _mm_shuffle_ps((row2), (row3), _MM_SHUFFLE(1, 0, 1, 0));	\
-	tmp3   = _mm_shuffle_ps((row2), (row3), _MM_SHUFFLE(3, 2, 3, 2));	\
-																		\
-	(row0) = _mm_shuffle_ps(tmp3, tmp2, _MM_SHUFFLE(1, 3, 1, 3));		\
-	(row1) = _mm_shuffle_ps(tmp3, tmp2, _MM_SHUFFLE(0, 2, 0, 2));		\
-	(row2) = _mm_shuffle_ps(tmp1, tmp0, _MM_SHUFFLE(1, 3, 1, 3));		\
-	(row3) = _mm_shuffle_ps(tmp1, tmp0, _MM_SHUFFLE(0, 2, 0, 2));		\
-	}
-
 namespace ITP485
 {
 
@@ -54,7 +41,11 @@ const float PiOver4 = 3.1415926535f / 4.0f;
 __declspec(align(16)) class FastMatrix4
 {
 private:
-	__m128 _rows[4];
+	union 
+	{
+		__m128 _rows[4];
+		D3DMATRIX _d3dm;
+	};
 public:
 	friend class FastVector3;
 	friend class FastQuaternion;
@@ -65,18 +56,18 @@ public:
 	// Constructs the matrix based on the passed-in floating point array[rows][column]
 	__forceinline FastMatrix4(float mat[4][4])
 	{
-		_rows[0] = _mm_set_ps(mat[0][0], mat[0][1], mat[0][2], mat[0][3]);
-		_rows[1] = _mm_set_ps(mat[1][0], mat[1][1], mat[1][2], mat[1][3]);
-		_rows[2] = _mm_set_ps(mat[2][0], mat[2][1], mat[2][2], mat[2][3]);
-		_rows[3] = _mm_set_ps(mat[3][0], mat[3][1], mat[3][2], mat[3][3]);
+		_rows[0] = _mm_setr_ps(mat[0][0], mat[0][1], mat[0][2], mat[0][3]);
+		_rows[1] = _mm_setr_ps(mat[1][0], mat[1][1], mat[1][2], mat[1][3]);
+		_rows[2] = _mm_setr_ps(mat[2][0], mat[2][1], mat[2][2], mat[2][3]);
+		_rows[3] = _mm_setr_ps(mat[3][0], mat[3][1], mat[3][2], mat[3][3]);
 	}
 
 	__forceinline void Set(float mat[4][4])
 	{
-		_rows[0] = _mm_set_ps(mat[0][0], mat[0][1], mat[0][2], mat[0][3]);
-		_rows[1] = _mm_set_ps(mat[1][0], mat[1][1], mat[1][2], mat[1][3]);
-		_rows[2] = _mm_set_ps(mat[2][0], mat[2][1], mat[2][2], mat[2][3]);
-		_rows[3] = _mm_set_ps(mat[3][0], mat[3][1], mat[3][2], mat[3][3]);
+		_rows[0] = _mm_setr_ps(mat[0][0], mat[0][1], mat[0][2], mat[0][3]);
+		_rows[1] = _mm_setr_ps(mat[1][0], mat[1][1], mat[1][2], mat[1][3]);
+		_rows[2] = _mm_setr_ps(mat[2][0], mat[2][1], mat[2][2], mat[2][3]);
+		_rows[3] = _mm_setr_ps(mat[3][0], mat[3][1], mat[3][2], mat[3][3]);
 	}
 
 	// Copy constructor
@@ -99,21 +90,8 @@ public:
 	}
 
 	// Returns this FastMatrix4 as a D3DMATRIX*
-	// This function is kinda expensive because it has to return a row-major matrix
 	__forceinline D3DMATRIX* ToD3D()
 	{
-		static union
-		{
-			__m128 _rows_d3d[4];
-			D3DMATRIX _d3dm;
-		};
-		_rows_d3d[0] = _mm_shuffle_ps(_rows[0], _rows[0], _MM_SHUFFLE(0, 1, 2, 3));
-		_rows_d3d[1] = _mm_shuffle_ps(_rows[1], _rows[1], _MM_SHUFFLE(0, 1, 2, 3));
-		_rows_d3d[2] = _mm_shuffle_ps(_rows[2], _rows[2], _MM_SHUFFLE(0, 1, 2, 3));
-		_rows_d3d[3] = _mm_shuffle_ps(_rows[3], _rows[3], _MM_SHUFFLE(0, 1, 2, 3));
-
-		//_MM_TRANSPOSE4_PS(_rows_d3d[0], _rows_d3d[1], _rows_d3d[2], _rows_d3d[3]);
-
 		return &_d3dm;
 	}
 
@@ -126,7 +104,9 @@ public:
 		__m128 rhs_row3 = rhs._rows[3];
 
 		// transpose the rhs matrix
-		FASTMATH_TRANSPOSE(rhs_row0, rhs_row1, rhs_row2, rhs_row3);
+		_MM_TRANSPOSE4_PS(rhs_row0, rhs_row1, rhs_row2, rhs_row3);
+
+		// TODO
 	}
 
 	// Adds the rhs matrix to this one, storing in this
@@ -152,18 +132,19 @@ public:
 	{
 		// scale 0 0 0
 		_rows[0] = _mm_set_ss(scale);
-		_rows[0] = _mm_shuffle_ps(_rows[0], _rows[0], _MM_SHUFFLE(0, 1, 1, 1));
+		_rows[0] = _mm_shuffle_ps(_rows[0], _rows[0], _MM_SHUFFLE(1, 1, 1, 0));
 
 		// 0 scale 0 0
 		_rows[1] = _mm_set_ss(scale);
-		_rows[1] = _mm_shuffle_ps(_rows[1], _rows[1], _MM_SHUFFLE(1, 0, 1, 1));
+		_rows[1] = _mm_shuffle_ps(_rows[1], _rows[1], _MM_SHUFFLE(1, 1, 0, 1));
 
 		// 0 0 scale 0
 		_rows[2] = _mm_set_ss(scale);
-		_rows[2] = _mm_shuffle_ps(_rows[2], _rows[2], _MM_SHUFFLE(1, 1, 0, 1));
+		_rows[2] = _mm_shuffle_ps(_rows[2], _rows[2], _MM_SHUFFLE(1, 0, 1, 1));
 
 		// 0 0 0 1
 		_rows[3] = _mm_set_ss(1.0f);
+		_rows[3] = _mm_shuffle_ps(_rows[3], _rows[3], _MM_SHUFFLE(0, 1, 1, 1));
 	}
 
 	// Given the angle (in radians), constructs a Rotation about the X axis
@@ -171,19 +152,20 @@ public:
 	{
 		// 1 0 0 0
 		_rows[0] = _mm_set_ss(1.0f);
-		_rows[0] = _mm_shuffle_ps(_rows[0], _rows[0], _MM_SHUFFLE(0, 1, 1, 1));
+		_rows[0] = _mm_shuffle_ps(_rows[0], _rows[0], _MM_SHUFFLE(1, 1, 1, 0));
 
 		float cos_theta = cosf(angle);
 		float sin_theta = sinf(angle);
 
 		// 0 cos -sin 0
-		_rows[1] = _mm_set_ps(0.0f, cos_theta, sin_theta * -1.0f, 0.0f);
+		_rows[1] = _mm_setr_ps(0.0f, cos_theta, sin_theta * -1.0f, 0.0f);
 
 		// 0 sin cos 0
-		_rows[2] = _mm_set_ps(0.0f, sin_theta, cos_theta, 0.0f);
+		_rows[2] = _mm_setr_ps(0.0f, sin_theta, cos_theta, 0.0f);
 		
 		// 0 0 0 1
 		_rows[3] = _mm_set_ss(1.0f);
+		_rows[3] = _mm_shuffle_ps(_rows[3], _rows[3], _MM_SHUFFLE(0, 1, 1, 1));
 	}
 
 	// Given the angle (in radians), constructs a Rotation about the Y axis
@@ -193,17 +175,18 @@ public:
 		float sin_theta = sinf(angle);
 
 		// cos 0 sin 0
-		_rows[0] = _mm_set_ps(cos_theta, 0.0f, sin_theta, 0.0f);
+		_rows[0] = _mm_setr_ps(cos_theta, 0.0f, sin_theta, 0.0f);
 
 		// 0 1 0 0
 		_rows[1] = _mm_set_ss(1.0f);
-		_rows[1] = _mm_shuffle_ps(_rows[1], _rows[1], _MM_SHUFFLE(1, 0, 1, 1));
+		_rows[1] = _mm_shuffle_ps(_rows[1], _rows[1], _MM_SHUFFLE(1, 1, 0, 1));
 
 		// -sin 0 cos 0
-		_rows[2] = _mm_set_ps(sin_theta * -1.0f, 0.0f, cos_theta, 0.0f);
+		_rows[2] = _mm_setr_ps(sin_theta * -1.0f, 0.0f, cos_theta, 0.0f);
 
 		// 0 0 0 1
 		_rows[3] = _mm_set_ss(1.0f);
+		_rows[3] = _mm_shuffle_ps(_rows[3], _rows[3], _MM_SHUFFLE(0, 1, 1, 1));
 	}
 
 	// Given the angle (in radians), constructs a Rotation about the Z axis
@@ -213,24 +196,25 @@ public:
 		float sin_theta = sinf(angle);
 
 		// cos -sin 0 0
-		_rows[0] = _mm_set_ps(cos_theta, sin_theta * -1.0f, 0.0f, 0.0f);
+		_rows[0] = _mm_setr_ps(cos_theta, sin_theta * -1.0f, 0.0f, 0.0f);
 
 		// sin cos 0 0
-		_rows[1] = _mm_set_ps(sin_theta, cos_theta, 0.0f, 0.0f);
+		_rows[1] = _mm_setr_ps(sin_theta, cos_theta, 0.0f, 0.0f);
 
 		// 0 0 1 0
 		_rows[2] = _mm_set_ss(1.0f);
-		_rows[2] = _mm_shuffle_ps(_rows[2], _rows[2], _MM_SHUFFLE(1, 1, 0, 1));
+		_rows[2] = _mm_shuffle_ps(_rows[2], _rows[2], _MM_SHUFFLE(1, 0, 1, 1));
 
 		// 0 0 0 1
 		_rows[3] = _mm_set_ss(1.0f);
+		_rows[3] = _mm_shuffle_ps(_rows[3], _rows[3], _MM_SHUFFLE(0, 1, 1, 1));
 	}
 
 	__forceinline friend FastMatrix4 Lerp(const FastMatrix4& a, const FastMatrix4& b, float f)
 	{
 
 		FastMatrix4 retVal;
-
+		
 		// row 0
 		__m128 pct = _mm_set_ps1(f);
 		retVal._rows[0] = _mm_mul_ps(b._rows[0], pct);
@@ -252,7 +236,6 @@ public:
 
 		return retVal;
 	}
-
 	// Has to be defined in fastmath.cpp because of circular dependency
 	
 	// Given the translation vector, constructs a translation matrix.
@@ -276,14 +259,14 @@ public:
 };
 
 // 3D vector class using SIMD
-class FastVector3
+__declspec(align(16)) class FastVector3
 {
 private:
 	__m128 _data;
-	// _data.m128_f32[3] = x
-	// _data.m128_f32[2] = y
-	// _data.m128_f32[1] = z
-	// _data.m128_f32[0] = w
+	// _data.m128_f32[0] = x
+	// _data.m128_f32[1] = y
+	// _data.m128_f32[2] = z
+	// _data.m128_f32[3] = w
 public:
 
 	// Default constructor does nothing
@@ -293,7 +276,7 @@ public:
 	// w is set to 1.0f
 	__forceinline FastVector3(float x, float y, float z)
 	{
-		_data = _mm_set_ps(x, y, z, 1.0f);
+		_data = _mm_setr_ps(x, y, z, 1.0f);
 	}
 
 	// Constructs a FastVector3 given an __m128
@@ -315,35 +298,35 @@ public:
 		return *this;
 	}
 
-	// Returns the X component (index 3)
+	// Returns the X component (index 0) - SLOW
 	__forceinline float GetX() const
 	{
-		return _data.m128_f32[3];
+		return _data.m128_f32[0];
 	}
 	
-	// Returns the Y component (index 2)
+	// Returns the Y component (index 1) - SLOW
 	__forceinline float GetY() const
-	{
-		return _data.m128_f32[2];
-	}
-	
-	// Returns the Z component (index 1)
-	__forceinline float GetZ() const
 	{
 		return _data.m128_f32[1];
 	}
+	
+	// Returns the Z component (index 2) - SLOW
+	__forceinline float GetZ() const
+	{
+		return _data.m128_f32[2];
+	}
 
-	// Returns the W component (index 0)
+	// Returns the W component (index 3) - SLOW
 	__forceinline float GetW() const
 	{
-		return _data.m128_f32[0];
+		return _data.m128_f32[3];
 	}
 	
 	// Sets the x, y, and z components to passed values.
 	// w is set to 1.0f
 	__forceinline void Set(float x, float y, float z)
 	{
-		_data = _mm_set_ps(x, y, z, 1.0f);
+		_data = _mm_setr_ps(x, y, z, 1.0f);
 	}
 
 	// Sets the X component
@@ -352,7 +335,7 @@ public:
 		// set index 0 of temp to x
 		__m128 temp = _mm_set_ss(x);
 		// insert the value into the X component
-		_data = _mm_insert_ps(_data, temp, 0x30);
+		_data = _mm_insert_ps(_data, temp, 0x00);
 	}
 	
 	// Sets the Y component
@@ -361,7 +344,7 @@ public:
 		// set index 0 of temp to y
 		__m128 temp = _mm_set_ss(y);
 		// insert the value into the Y component
-		_data = _mm_insert_ps(_data, temp, 0x20);
+		_data = _mm_insert_ps(_data, temp, 0x10);
 	}
 	
 	// Sets the Z component
@@ -370,26 +353,26 @@ public:
 		// set index 0 of temp to z
 		__m128 temp = _mm_set_ss(z);
 		// insert the value into the Z component
-		_data = _mm_insert_ps(_data, temp, 0x10);
+		_data = _mm_insert_ps(_data, temp, 0x20);
 	}
 
 	// Computes the dot product between this vector and rhs.
 	// Returns the float result.
 	__forceinline float Dot(const FastVector3& rhs) const
 	{
-		return 0.0f; // fixme
+		return 0.0f; // TODO: Fix
 	}
 
 	// Adds this vector to rhs, storing in this
 	__forceinline void Add(const FastVector3& rhs)
 	{
-		
+		// TODO
 	}
 
 	// Subtracts this - rhs, storing in this
 	__forceinline void Sub(const FastVector3& rhs)
 	{
-
+		// TODO
 	}
 
 	// Does a scalar multiply by scalar
@@ -402,32 +385,32 @@ public:
 	// Normalizes this vector
 	__forceinline void Normalize()
 	{
-
-	}
+		// TODO
+ 	}
 
 	// Returns the length squared of this vector
 	__forceinline float LengthSquared() const
 	{
-		return 0.0f; // fixme
+		return 0.0f; // TODO: Fix
 	}
 
 	// Returns the length of this vector
 	__forceinline float Length() const
 	{
-		return 0.0f; // fixme
+		return 0.0f; // TODO: Fix
 	}
 
 	// Does a cross product between lhs and rhs, returning the result vector by value
 	__forceinline friend FastVector3 Cross(const FastVector3& lhs, const FastVector3& rhs)
 	{
-		return FastVector3(FastVector3::Zero); // fixme
+		return FastVector3(FastVector3::Zero); // TODO: Fix
 	}
 
 	// Interpolates between a and b, returning the result vector by value
 	// result = a * (1.0f - f) + b * f
 	__forceinline friend FastVector3 Lerp(const FastVector3 &a, const FastVector3 &b, float f)
 	{
-		return FastVector3(FastVector3::Zero); // fixme
+		return FastVector3(FastVector3::Zero); // TODO: Fix
 	}
 
 	// does a 4-way blend
@@ -436,15 +419,15 @@ public:
 	__forceinline friend FastVector3 Blend(const FastVector3& a, const FastVector3& b, const FastVector3& c, const FastVector3& d,
 											float fa, float fb, float fc)
 	{
-		return FastVector3(FastVector3::Zero); // fixme
+		return FastVector3(FastVector3::Zero); // TODO: Fix
 	}
 
 	// Transforms this vector by the passed 4x4 matrix
 	// w is set to 1.0f before the transform is done
 	__forceinline void Transform(const FastMatrix4 &mat)
 	{
-
-	}
+		// TODO
+ 	}
 
 	// Rotates this vector by the passed quaternion
 	void Rotate(const FastQuaternion& q);
@@ -453,8 +436,8 @@ public:
 	// w is set to 0.0f before the transform is done
 	__forceinline void TransformAsVector(const FastMatrix4 &mat)
 	{
-
-	}
+		// TODO
+ 	}
 
 	friend class FastMatrix4;
 	friend class FastQuaternion;
@@ -469,10 +452,10 @@ public:
 };
 
 // Unit quaternion class using SIMD
-class FastQuaternion
+__declspec(align(16)) class FastQuaternion
 {
 private:
-	__m128 _data;
+	DirectX::XMVECTOR _data;
 	// 3-1 is vector component
 	// 0 is scalar component
 public:
@@ -483,18 +466,7 @@ public:
 	// and the angle (in radians).
 	FastQuaternion(const FastVector3& axis, float angle)
 	{
-		_data = axis._data;
-		// clear out W (scalar) component
-		__m128 temp = _mm_setzero_ps();
-		_data = _mm_insert_ps(_data, temp, 0x0);
-
-		// load up sin (angle/2) and multiply the vector by this
-		__m128 sinangleover2 = _mm_set_ps1(sinf(angle / 2.0f));
-		_data = _mm_mul_ps(_data, sinangleover2);
-
-		// now add in the scalar component
-		__m128 scalar = _mm_set_ss(cosf(angle / 2.0f));
-		_data = _mm_add_ps(_data, scalar);
+		_data = DirectX::XMQuaternionRotationNormal(axis._data, angle);
 	}
 
 	// Constructs the quaternion given an __m128
@@ -507,7 +479,7 @@ public:
 	// Note this assumes you have already applied the correct formula.
 	__forceinline FastQuaternion(float qv_x, float qv_y, float qv_z, float qs)
 	{
-		_data = _mm_set_ps(qv_x, qv_y, qv_z, qs);
+		_data = _mm_setr_ps(qv_x, qv_y, qv_z, qs);
 	}
 
 	__forceinline void Set(float qv_x, float qv_y, float qv_z, float qs)
@@ -528,28 +500,28 @@ public:
 		return *this;
 	}
 
-	// Returns the x component of the vector component (index 3)
+	// Returns the x component of the vector component (index 0)
 	__forceinline float GetVectorX() const
 	{
-		return _data.m128_f32[3];
+		return _data.m128_f32[0];
 	}
 
-	// Returns the y component of the vector component (index 2)
+	// Returns the y component of the vector component (index 1)
 	__forceinline float GetVectorY() const
-	{
-		return _data.m128_f32[2];
-	}
-
-	// Returns the z component of the vector component (index 1)
-	__forceinline float GetVectorZ() const
 	{
 		return _data.m128_f32[1];
 	}
 
-	// Returns the scalar component (index 0)
+	// Returns the z component of the vector component (index 2)
+	__forceinline float GetVectorZ() const
+	{
+		return _data.m128_f32[2];
+	}
+
+	// Returns the scalar component (index 3)
 	__forceinline float GetScalar() const
 	{
-		return _data.m128_f32[0];
+		return _data.m128_f32[3];
 	}
 	
 	// Rotate by THIS quaternion, followed by rhs
@@ -557,91 +529,34 @@ public:
 	// Store result in this quaternion.
 	void Multiply(const FastQuaternion& rhs)
 	{
-		// vector component is:
-		// ps * qv + qs * pv + pv x qv
-		
-		// first calculate pv x qv
-		
-		// We effectively want to do this:
-		// <A.y * B.z, A.z * B.x, A.x * B.y> - <A.z * B.y, A.x * B.z, A.y * B.x>
-		// calculate first vector
-		__m128 tempA = _mm_shuffle_ps(rhs._data, rhs._data, _MM_SHUFFLE(2, 1, 3, 0));
-		__m128 tempB = _mm_shuffle_ps(_data, _data, _MM_SHUFFLE(1, 3, 2, 0));
-		__m128 vector_component = _mm_mul_ps(tempA, tempB);
-
-		// calculate second vector
-		tempA = _mm_shuffle_ps(rhs._data, rhs._data, _MM_SHUFFLE(1, 3, 2, 0));
-		tempB = _mm_shuffle_ps(_data, _data, _MM_SHUFFLE(2, 1, 3, 0));
-		tempA = _mm_mul_ps(tempA, tempB);
-
-		// finally, subtract the two vectors
-		vector_component = _mm_sub_ps(vector_component, tempA);
-
-		// calculate ps * qv, and add it to our vector component
-		__m128 temp = _mm_shuffle_ps(rhs._data, rhs._data, _MM_SHUFFLE(0, 0, 0, 0));
-		vector_component = _mm_add_ps(vector_component, _mm_mul_ps(_data, temp));
-
-		// calculate qs * pv, and add it to our vector component
-		__m128 temp2 = _mm_shuffle_ps(_data, _data, _MM_SHUFFLE(0, 0, 0, 0));
-		vector_component = _mm_add_ps(vector_component, _mm_mul_ps(rhs._data, temp2));
-
-		// scalar component is ps * qs - pv . qv
-		// calculate ps * qs
-		// ps is still in temp, qs is still in temp2
-		temp = _mm_mul_ps(temp, temp2);
-
-		// pv . qv
-		__m128 scalar_component = _mm_dp_ps(rhs._data, _data, 0xE1);
-		temp2 = _mm_set_ss(-1.0f);
-		scalar_component = _mm_mul_ss(scalar_component, temp2);
-		scalar_component = _mm_add_ss(scalar_component, temp); // this will leave 0s for X-Z
-
-		// make sure our vector component has a W of 0
-		vector_component = _mm_insert_ps(vector_component, vector_component, 0x1);
-
-		// now combine the two components
-		_data = _mm_add_ps(vector_component, scalar_component);
+		_data = DirectX::XMQuaternionMultiply(_data, rhs._data);
 	}
 
 	// Calculates the conjugate of this quaternion
 	// Remember, for unit quaternions, the inverse is the conjugate.
 	__forceinline void Conjugate()
 	{
-		__m128 temp = _mm_set_ps1(-1.0f);
-		__m128 temp2 = _mm_set_ss(2.0f);
-		temp = _mm_add_ss(temp, temp2);
-		_data = _mm_mul_ps(_data, temp);
+		_data = DirectX::XMQuaternionConjugate(_data);
 	}
 
 	// Returns the length squared of this quaternion
 	__forceinline float LengthSquared() const
 	{
-		const int Dot4Mask = 0xF1;
-		__m128 result = _mm_dp_ps(_data, _data, Dot4Mask);
+		__m128 result = DirectX::XMQuaternionLengthSq(_data);
 		return result.m128_f32[0];
 	}
 
 	// Returns the length of this quaternion
 	__forceinline float Length() const
 	{
-		const int Dot4Mask = 0xF1;
-		__m128 result = _mm_dp_ps(_data, _data, Dot4Mask);
-		result = _mm_sqrt_ss(result);
+		__m128 result = DirectX::XMQuaternionLength(_data);
 		return result.m128_f32[0];
 	}
 
 	// Normalizes this quaternion
 	__forceinline void Normalize()
 	{
-		// dot with self to get length squared
-		const int Dot4Mask = 0xFF;
-		__m128 result = _mm_dp_ps(_data, _data, Dot4Mask);
-
-		// take reciprocal sqrt of dot product result 
-		result = _mm_rsqrt_ps(result);
-
-		// now multiply data by this
-		_data = _mm_mul_ps(_data, result);
+		_data = DirectX::XMQuaternionNormalize(_data);
 	}
 
 	// Interpolates between quaternion a and b, returning the result by value.
@@ -657,15 +572,7 @@ public:
 		result = _mm_add_ps(result, _mm_mul_ps(a._data, pct));
 
 		// now normalize the result
-		// dot with self to get length squared
-		const int Dot4Mask = 0xFF;
-		__m128 dot = _mm_dp_ps(result, result, Dot4Mask);
-
-		// take reciprocal sqrt of dot product result 
-		dot = _mm_rsqrt_ps(dot);
-
-		// now multiply data by this
-		result = _mm_mul_ps(result, dot);
+		result = DirectX::XMQuaternionNormalize(result);
 
 		return FastQuaternion(result);
 	}
@@ -697,14 +604,7 @@ public:
 
 		// now normalize the result
 		// dot with self to get length squared
-		const int Dot4Mask = 0xFF;
-		__m128 dot = _mm_dp_ps(result, result, Dot4Mask);
-
-		// take reciprocal sqrt of dot product result 
-		dot = _mm_rsqrt_ps(dot);
-
-		// now multiply data by this
-		result = _mm_mul_ps(result, dot);
+		result = DirectX::XMQuaternionNormalize(result);
 
 		return FastQuaternion(result);
 	}
