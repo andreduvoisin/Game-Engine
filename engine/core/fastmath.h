@@ -26,6 +26,9 @@ typedef struct _D3DMATRIX {
 #define D3DMATRIX_DEFINED
 #endif
 
+#define _MM_SHUFFLER( xi, yi, zi, wi ) _MM_SHUFFLE( wi, zi, yi, xi )
+
+
 namespace ITP485
 {
 
