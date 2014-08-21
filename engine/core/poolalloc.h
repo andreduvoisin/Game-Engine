@@ -109,8 +109,6 @@ public:
 	// #ifdef _DEBUG, Dbg_Assert that boundary still == 0xdeadbeef (if not, the bounds were overwritten)
 	// Also, write the value 0xde over and over into the _memory array.
 	//
-	// Note that there is no reasonable way to verify that the pointer actually belongs in the
-	// pool, so don't call this on random pointers!
 	void Free(void* ptr);
 
 	// Returns the number of blocks free in the pool
