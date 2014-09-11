@@ -109,7 +109,17 @@ public:
 		// transpose the rhs matrix
 		_MM_TRANSPOSE4_PS(rhs_row0, rhs_row1, rhs_row2, rhs_row3);
 
-		// TODO
+		for (int i = 0; i < 4; ++i)
+		{
+			__m128 x = _mm_dp_ps(_rows[i], rhs_row0, 0xF1);
+			__m128 y = _mm_dp_ps(_rows[i], rhs_row1, 0xF2);
+			__m128 z = _mm_dp_ps(_rows[i], rhs_row2, 0xF4);
+			__m128 w = _mm_dp_ps(_rows[i], rhs_row3, 0xF8);
+
+			_rows[i] = _mm_add_ps(x, y);
+			_rows[i] = _mm_add_ps(_rows[i], z);
+			_rows[i] = _mm_add_ps(_rows[i], w);
+		}
 	}
 
 	// Adds the rhs matrix to this one, storing in this
@@ -363,19 +373,20 @@ public:
 	// Returns the float result.
 	__forceinline float Dot(const FastVector3& rhs) const
 	{
-		return 0.0f; // TODO: Fix
+		__m128 temp = _mm_dp_ps(_data, rhs._data, 0x71);
+		return temp.m128_f32[0];
 	}
 
 	// Adds this vector to rhs, storing in this
 	__forceinline void Add(const FastVector3& rhs)
 	{
-		// TODO
+		_data = _mm_add_ps(_data, rhs._data);
 	}
 
 	// Subtracts this - rhs, storing in this
 	__forceinline void Sub(const FastVector3& rhs)
 	{
-		// TODO
+		_data = _mm_sub_ps(_data, rhs._data);
 	}
 
 	// Does a scalar multiply by scalar
@@ -388,32 +399,51 @@ public:
 	// Normalizes this vector
 	__forceinline void Normalize()
 	{
-		// TODO
+		__m128 temp = _mm_dp_ps(_data, _data, 0x77);
+		temp = _mm_rsqrt_ps(temp);
+		_data = _mm_mul_ps(_data, temp);
  	}
 
 	// Returns the length squared of this vector
 	__forceinline float LengthSquared() const
 	{
-		return 0.0f; // TODO: Fix
+		__m128 temp = _mm_dp_ps(_data, _data, 0x71);
+		return temp.m128_f32[0];
 	}
 
 	// Returns the length of this vector
 	__forceinline float Length() const
 	{
-		return 0.0f; // TODO: Fix
+		__m128 temp = _mm_dp_ps(_data, _data, 0x71);
+		temp = _mm_sqrt_ps(temp);
+		return temp.m128_f32[0];
 	}
 
 	// Does a cross product between lhs and rhs, returning the result vector by value
 	__forceinline friend FastVector3 Cross(const FastVector3& lhs, const FastVector3& rhs)
 	{
-		return FastVector3(FastVector3::Zero); // TODO: Fix
+		__m128 temp1 = _mm_shuffle_ps(lhs._data, lhs._data, _MM_SHUFFLER(1, 2, 0, 3));
+		__m128 temp2 = _mm_shuffle_ps(rhs._data, rhs._data, _MM_SHUFFLER(2, 0, 1, 3));
+		__m128 left = _mm_mul_ps(temp1, temp2);
+
+		temp1 = _mm_shuffle_ps(lhs._data, lhs._data, _MM_SHUFFLER(2, 0, 1, 3));
+		temp2 = _mm_shuffle_ps(rhs._data, rhs._data, _MM_SHUFFLER(1, 2, 0, 3));
+		__m128 right = _mm_mul_ps(temp1, temp2);
+
+		return FastVector3(_mm_sub_ps(left, right));
 	}
 
 	// Interpolates between a and b, returning the result vector by value
 	// result = a * (1.0f - f) + b * f
 	__forceinline friend FastVector3 Lerp(const FastVector3 &a, const FastVector3 &b, float f)
 	{
-		return FastVector3(FastVector3::Zero); // TODO: Fix
+		__m128 temp = _mm_set_ps1(1.0f - f);
+		__m128 left = _mm_mul_ps(a._data, temp);
+
+		temp = _mm_set_ps1(f);
+		__m128 right = _mm_mul_ps(b._data, temp);
+
+		return FastVector3(_mm_add_ps(left, right));
 	}
 
 	// does a 4-way blend
@@ -422,14 +452,38 @@ public:
 	__forceinline friend FastVector3 Blend(const FastVector3& a, const FastVector3& b, const FastVector3& c, const FastVector3& d,
 											float fa, float fb, float fc)
 	{
-		return FastVector3(FastVector3::Zero); // TODO: Fix
+		__m128 temp = _mm_set_ps1(fa);
+		__m128 one = _mm_mul_ps(a._data, temp);
+
+		temp = _mm_set_ps1(fb);
+		__m128 two = _mm_mul_ps(b._data, temp);
+
+		temp = _mm_set_ps1(fc);
+		__m128 three = _mm_mul_ps(c._data, temp);
+
+		temp = _mm_set_ps1(1.0f - fa - fb - fc);
+		__m128 four = _mm_mul_ps(d._data, temp);
+
+		temp = _mm_add_ps(one, two);
+		temp = _mm_add_ps(temp, three);
+		temp = _mm_add_ps(temp, four);
+		return FastVector3(temp);
 	}
 
 	// Transforms this vector by the passed 4x4 matrix
 	// w is set to 1.0f before the transform is done
 	__forceinline void Transform(const FastMatrix4 &mat)
 	{
-		// TODO
+		_data = _mm_insert_ps(_data, _mm_set_ss(1.0f), 0x30);
+
+		__m128 x = _mm_dp_ps(mat._rows[0], _data, 0xF1);
+		__m128 y = _mm_dp_ps(mat._rows[1], _data, 0xF2);
+		__m128 z = _mm_dp_ps(mat._rows[2], _data, 0xF4);
+		__m128 w = _mm_dp_ps(mat._rows[3], _data, 0xF8);
+
+		_data = _mm_add_ps(x, y);
+		_data = _mm_add_ps(_data, z);
+		_data = _mm_add_ps(_data, w);
  	}
 
 	// Rotates this vector by the passed quaternion
@@ -439,7 +493,16 @@ public:
 	// w is set to 0.0f before the transform is done
 	__forceinline void TransformAsVector(const FastMatrix4 &mat)
 	{
-		// TODO
+		_data = _mm_insert_ps(_data, _mm_set_ps1(0.0f), 0x30);
+
+		__m128 x = _mm_dp_ps(mat._rows[0], _data, 0xF1);
+		__m128 y = _mm_dp_ps(mat._rows[1], _data, 0xF2);
+		__m128 z = _mm_dp_ps(mat._rows[2], _data, 0xF4);
+		__m128 w = _mm_dp_ps(mat._rows[3], _data, 0xF8);
+
+		_data = _mm_add_ps(x, y);
+		_data = _mm_add_ps(_data, z);
+		_data = _mm_add_ps(_data, w);
  	}
 
 	friend class FastMatrix4;
