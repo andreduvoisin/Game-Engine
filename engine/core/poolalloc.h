@@ -159,10 +159,7 @@ void PoolAllocator<block_size, num_blocks>::StartUp()
 #ifdef _DEBUG
 	for (int i = 0; i < num_blocks; ++i)
 	{
-		for (int j = 0; j < block_size; ++j)
-		{
-			m_pPool[i]._memory[j] = 0xde;
-		}
+		memset(m_pPool[i]._memory, 0xde, block_size);
 		m_pPool[i]._boundary = 0xdeadbeef;
 	}
 #endif
@@ -172,6 +169,7 @@ void PoolAllocator<block_size, num_blocks>::StartUp()
 template <size_t block_size, unsigned int num_blocks>
 void PoolAllocator<block_size, num_blocks>::ShutDown()
 {
+	iBlocksFree = 0;
 	delete[] m_pPool;
 }
 
@@ -217,10 +215,7 @@ void PoolAllocator<block_size, num_blocks>::Free(void* ptr)
 #ifdef _DEBUG
 	Dbg_Assert(block->_boundary == 0xdeadbeef, "Bounds of PoolBlock were overwritten.");
 	if (block->_boundary != 0xdeadbeef) { block->_boundary = 0xdeadbeef; }
-	for (int i = 0; i < block_size; ++i)
-	{
-		block->_memory[i] = 0xde;
-	}
+	memset(block->_memory, 0xde, block_size);
 #endif
 }
 
