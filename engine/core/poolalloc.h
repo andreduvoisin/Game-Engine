@@ -145,14 +145,34 @@ protected:
 template <size_t block_size, unsigned int num_blocks>
 void PoolAllocator<block_size, num_blocks>::StartUp()
 {
+	m_pPool = new PoolBlock<block_size>[num_blocks];
 
+	m_pFreeList = m_pPool;
+	for (int i = 0; i < num_blocks - 1; ++i)
+	{
+		m_pFreeList[i]._next = &m_pFreeList[i + 1];
+	}
+	m_pFreeList[num_blocks - 1]._next = NULL;
+
+	iBlocksFree = num_blocks;
+
+#ifdef _DEBUG
+	for (int i = 0; i < num_blocks; ++i)
+	{
+		for (int j = 0; j < block_size; ++j)
+		{
+			m_pPool[i]._memory[j] = 0xde;
+		}
+		m_pPool[i]._boundary = 0xdeadbeef;
+	}
+#endif
 }
 
 // ShutDown deallocates the pool.
 template <size_t block_size, unsigned int num_blocks>
 void PoolAllocator<block_size, num_blocks>::ShutDown()
 {
-
+	delete[] m_pPool;
 }
 
 // Allocate returns a pointer to usable memory within the pool.
@@ -166,7 +186,16 @@ void PoolAllocator<block_size, num_blocks>::ShutDown()
 template <size_t block_size, unsigned int num_blocks>
 void* PoolAllocator<block_size, num_blocks>::Allocate(size_t size)
 {
-	return 0;
+	Dbg_Assert(iBlocksFree != 0, "No blocks available.");
+	if (iBlocksFree == 0) { return 0; }
+	Dbg_Assert(size <= block_size, "Size to allocate cannot be larger then the pool block size.");
+	if (size > block_size) { return 0; }
+
+	PoolBlock<block_size>* ptr = m_pFreeList;
+	m_pFreeList = m_pFreeList->_next;
+	--iBlocksFree;
+
+	return ptr;
 }
 
 // Free will return the block to the front of the free list.
@@ -180,7 +209,19 @@ void* PoolAllocator<block_size, num_blocks>::Allocate(size_t size)
 template <size_t block_size, unsigned int num_blocks>
 void PoolAllocator<block_size, num_blocks>::Free(void* ptr)
 {
+	PoolBlock<block_size>* block = reinterpret_cast<PoolBlock<block_size>*>(ptr);
+	block->_next = iBlocksFree ? m_pFreeList : NULL;
+	m_pFreeList = block;
+	++iBlocksFree;
 
+#ifdef _DEBUG
+	Dbg_Assert(block->_boundary == 0xdeadbeef, "Bounds of PoolBlock were overwritten.");
+	if (block->_boundary != 0xdeadbeef) { block->_boundary = 0xdeadbeef; }
+	for (int i = 0; i < block_size; ++i)
+	{
+		block->_memory[i] = 0xde;
+	}
+#endif
 }
 
 } // namespace ITP485
