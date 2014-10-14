@@ -152,7 +152,7 @@ void PoolAllocator<block_size, num_blocks>::StartUp()
 	{
 		m_pFreeList[i]._next = &m_pFreeList[i + 1];
 	}
-	m_pFreeList[num_blocks - 1]._next = NULL;
+	m_pFreeList[num_blocks - 1]._next = nullptr;
 
 	iBlocksFree = num_blocks;
 
@@ -208,7 +208,7 @@ template <size_t block_size, unsigned int num_blocks>
 void PoolAllocator<block_size, num_blocks>::Free(void* ptr)
 {
 	PoolBlock<block_size>* block = reinterpret_cast<PoolBlock<block_size>*>(ptr);
-	block->_next = iBlocksFree ? m_pFreeList : NULL;
+	block->_next = iBlocksFree ? m_pFreeList : nullptr;
 	m_pFreeList = block;
 	++iBlocksFree;
 
