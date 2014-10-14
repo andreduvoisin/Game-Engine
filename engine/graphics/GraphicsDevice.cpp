@@ -2,6 +2,7 @@
 #include "../core/dbg_assert.h"
 #include "MeshManager.h"
 #include "MeshData.h"
+#include "../Components/MeshComponent.h"
 #include <fstream>
 
 namespace ITP485
@@ -44,11 +45,28 @@ void GraphicsDevice::Setup(HWND hWnd)
 
 	// Setup the MeshManager.
 	MeshManager::get().Setup();
+
+	// Setup the MeshComponent pool.
+	MeshComponentPool::get().StartUp();
+
+	// BEGIN TEMP CODE
+	MeshComponent* pCube1;
+	MeshComponent* pCube2;
+	MeshComponent* pCube3;
+	pCube1 = new MeshComponent("cube.itpmesh");
+	pCube1->GetWorldTransform().CreateRotationY(1.047f);
+	pCube2 = new MeshComponent("cube.itpmesh");
+	pCube2->GetWorldTransform().CreateRotationY(-1.047f);
+	pCube3 = new MeshComponent("cube.itpmesh");
+	// END TEMP CODE
 }
 
 // Releases all D3D resources
 void GraphicsDevice::Cleanup()
 {
+	// Cleanup the MeshComponent pool.
+	MeshComponentPool::get().ShutDown();
+
 	if (m_pDebugEffect)
 	{
 		m_pDebugEffect->Release();
@@ -73,16 +91,6 @@ void GraphicsDevice::Render()
 {
 	Dbg_Assert(m_pDevice != 0, "Can't render without a device.");
 
-	// BEGIN TEMP CODE
-	static MeshData* s_pTempMesh = NULL;
-	if (!s_pTempMesh)
-	{
-		s_pTempMesh = MeshManager::get().GetMeshData("cube.itpmesh");
-		MeshData* pMesh2 = MeshManager::get().GetMeshData("cube.itpmesh");
-		Dbg_Assert(s_pTempMesh == pMesh2, "GetMeshData reallocated cube. :(");
-	}
-	// END TEMP CODE
-
 	// Clear the back buffer and zBuffer.
 	m_pDevice->Clear(0, NULL, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER,
 		D3DCOLOR_XRGB(0, 0, 0), 1.0f, 0);
@@ -96,15 +104,11 @@ void GraphicsDevice::Render()
 		mViewProj.Multiply(m_CameraMtx);
 		m_pDebugEffect->SetMatrix("gViewProj", static_cast<D3DXMATRIX*>(mViewProj.ToD3D()));
 
-		// BEGIN TEMP CODE
-		Matrix4 WorldTransform;
-		WorldTransform.CreateRotationY(0.785398163f);
-		m_pDebugEffect->SetMatrix("gWorld", static_cast<D3DXMATRIX*>(WorldTransform.ToD3D()));
-
-		D3DXHANDLE hTechnique = m_pDebugEffect->GetTechniqueByName("DefaultTechnique");
-
-		s_pTempMesh->Draw(m_pDebugEffect, hTechnique);
-		// END TEMP CODE
+		// Draw all MeshComponents.
+		for (MeshComponent* pMeshComponent : m_MeshComponentSet)
+		{
+			pMeshComponent->Draw();
+		}
 
 		// End the scene.
 		m_pDevice->EndScene();

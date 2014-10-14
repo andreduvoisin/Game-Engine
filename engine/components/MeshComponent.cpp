@@ -14,19 +14,29 @@ namespace ITP485
 // MeshComponentSet.
 MeshComponent::MeshComponent(const char* szFileName)
 {
+	m_pMeshData = MeshManager::get().GetMeshData(szFileName);
+	m_WorldTransform = Matrix4::Identity;
+	m_bIsVisible = true;
+	GraphicsDevice::get().m_MeshComponentSet.insert(this);
 }
 
 // Makes the appropriate Direct3D calls to Draw this MeshComponent
 // if m_bIsVisible is true.
 void MeshComponent::Draw()
 {
-
+	if (m_bIsVisible)
+	{
+		auto pDebugEffect = GraphicsDevice::get().GetDebugEffect();
+		pDebugEffect->SetMatrix("gWorld", static_cast<D3DXMATRIX*>(m_WorldTransform.ToD3D()));
+		D3DXHANDLE hTechnique = pDebugEffect->GetTechniqueByName("DefaultTechnique");
+		m_pMeshData->Draw(pDebugEffect, hTechnique);
+	}
 }
 
 // Removes this MeshComponent from GraphicsDevice's MeshComponentSet
 MeshComponent::~MeshComponent()
 {
-
+	GraphicsDevice::get().m_MeshComponentSet.erase(this);
 }
 
 }
