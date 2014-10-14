@@ -2,6 +2,7 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include "../engine/graphics/GraphicsDevice.h"
+#include "../engine/game/GameWorld.h"
 
 //-----------------------------------------------------------------------------
 // Name: MsgProc()
@@ -17,6 +18,10 @@ LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 	case WM_PAINT:
 		ValidateRect(hWnd, NULL);
+		return 0;
+
+	case WM_ACTIVATE:
+		ITP485::GameWorld::get().SetPaused(wParam == WA_INACTIVE);
 		return 0;
 	}
 
@@ -47,16 +52,33 @@ INT WINAPI wWinMain(HINSTANCE hInst, HINSTANCE, LPWSTR, INT)
 
 	// Setup our GameWorld and GraphicsDevice singletons
 	ITP485::GraphicsDevice::get().Setup(hWnd);
+	ITP485::GameWorld::get().Setup();
+	ITP485::GameWorld::get().LoadLevel("level.ini");
 
 	// Show the window
 	ShowWindow(hWnd, SW_SHOWDEFAULT);
 	UpdateWindow(hWnd);
 
+	// Variables needed for performance queries.
+	LARGE_INTEGER freq, before, after;
+	// Initialize for the first loop iteration.
+	freq.QuadPart = 1;
+	before.QuadPart = 0;
+	after.QuadPart = 0;
+
 	// enter the main game loop
 	bool bQuit = false;
 	while (!bQuit)
-	{
+	{		
+		// Find elapsed time for the loop.
+		float fElapsed = static_cast<float>(after.QuadPart - before.QuadPart) / freq.QuadPart;
+
+		// Query before performance.
+		QueryPerformanceFrequency(&freq);
+		QueryPerformanceCounter(&before);
+
 		// Update the game world based on delta time
+		ITP485::GameWorld::get().Update(fElapsed);
 
 		// Render this frame
 		ITP485::GraphicsDevice::get().Render();
@@ -72,9 +94,13 @@ INT WINAPI wWinMain(HINSTANCE hInst, HINSTANCE, LPWSTR, INT)
 				break;
 			}
 		}
+
+		// Query after performance.
+		QueryPerformanceCounter(&after);
 	}
 
 	// Cleanup the GameWorld and GraphicsDevice singletons
+	ITP485::GameWorld::get().Cleanup();
 	ITP485::GraphicsDevice::get().Cleanup();
 
 	UnregisterClass(L"ITP485 Game", wc.hInstance);

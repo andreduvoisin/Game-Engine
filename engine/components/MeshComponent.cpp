@@ -16,6 +16,9 @@ MeshComponent::MeshComponent(const char* szFileName)
 {
 	m_pMeshData = MeshManager::get().GetMeshData(szFileName);
 	m_WorldTransform = Matrix4::Identity;
+	m_Quaternion = Quaternion::Identity;
+	m_TranslationVector = Vector3::Zero;
+	m_Scale = 1.0f;
 	m_bIsVisible = true;
 	GraphicsDevice::get().m_MeshComponentSet.insert(this);
 }
@@ -26,6 +29,13 @@ void MeshComponent::Draw()
 {
 	if (m_bIsVisible)
 	{
+		Matrix4 tempMatrix;
+		m_WorldTransform.CreateTranslation(m_TranslationVector);
+		tempMatrix.CreateFromQuaternion(m_Quaternion);
+		m_WorldTransform.Multiply(tempMatrix);
+		tempMatrix.CreateScale(m_Scale);
+		m_WorldTransform.Multiply(tempMatrix);
+
 		auto pDebugEffect = GraphicsDevice::get().GetDebugEffect();
 		pDebugEffect->SetMatrix("gWorld", static_cast<D3DXMATRIX*>(m_WorldTransform.ToD3D()));
 		D3DXHANDLE hTechnique = pDebugEffect->GetTechniqueByName("DefaultTechnique");

@@ -48,17 +48,6 @@ void GraphicsDevice::Setup(HWND hWnd)
 
 	// Setup the MeshComponent pool.
 	MeshComponentPool::get().StartUp();
-
-	// BEGIN TEMP CODE
-	MeshComponent* pCube1;
-	MeshComponent* pCube2;
-	MeshComponent* pCube3;
-	pCube1 = new MeshComponent("cube.itpmesh");
-	pCube1->GetWorldTransform().CreateRotationY(1.047f);
-	pCube2 = new MeshComponent("cube.itpmesh");
-	pCube2->GetWorldTransform().CreateRotationY(-1.047f);
-	pCube3 = new MeshComponent("cube.itpmesh");
-	// END TEMP CODE
 }
 
 // Releases all D3D resources

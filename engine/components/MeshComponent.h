@@ -7,7 +7,7 @@
 namespace ITP485
 {
 
-typedef PoolAllocator<80, 1024> MeshComponentPool;
+typedef PoolAllocator<112, 1024> MeshComponentPool;
 struct MeshData;
 
 class MeshComponent
@@ -31,8 +31,17 @@ public:
 	// Removes this MeshComponent from GraphicsDevice's MeshComponentSet
 	~MeshComponent();
 
-	// Returns WorldTransform by reference, so you can modify it
+	// Returns m_WorldTransform by reference, so you can modify it.
 	Matrix4& GetWorldTransform() { return m_WorldTransform; }
+
+	// Returns m_Quaternion by reference, so you can modify it.
+	Quaternion& GetQuaternion() { return m_Quaternion; }
+
+	// Returns m_TranslationVector by reference, so you can modify it.
+	Vector3& GetTranslationVector() { return m_TranslationVector; }
+
+	float GetScale() const { return m_Scale; }
+	void SetScale(float value) { m_Scale = value; }
 
 	bool GetVisible() const { return m_bIsVisible; }
 	void SetVisible(bool bValue) { m_bIsVisible = bValue; }
@@ -42,8 +51,14 @@ private:
 	MeshComponent() { }
 	// World Transform Matrix
 	Matrix4 m_WorldTransform;
+	// Quaternion (for rotation)
+	Quaternion m_Quaternion;
+	// Vector3 (for translation)
+	Vector3 m_TranslationVector;
 	// Our particular model information
 	MeshData* m_pMeshData;
+	// float (for uniform scale)
+	float m_Scale;
 	// Whether or not this guy is visible
 	bool m_bIsVisible:1;
 };
