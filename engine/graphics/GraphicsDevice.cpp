@@ -41,6 +41,9 @@ void GraphicsDevice::Setup(HWND hWnd)
 	m_CameraMtx.CreateLookAt(Vector3(0.0f, 3.0f, -5.0f),
 		Vector3(0.0f, 0.0f, 0.0f), Vector3(0.0f, 1.0f, 0.0f));
 	m_ProjectionMtx.CreatePerspectiveFOV(0.78539816f, 1.333333f, 1.0f, 100.0f);
+
+	// Setup the MeshManager.
+	MeshManager::get().Setup();
 }
 
 // Releases all D3D resources
@@ -60,12 +63,25 @@ void GraphicsDevice::Cleanup()
 	{
 		m_pD3D->Release();
 	}
+
+	// Cleanup the MeshManager.
+	MeshManager::get().Cleanup();
 }
 
 // Renders the current frame
 void GraphicsDevice::Render()
 {
 	Dbg_Assert(m_pDevice != 0, "Can't render without a device.");
+
+	// BEGIN TEMP CODE
+	static MeshData* s_pTempMesh = NULL;
+	if (!s_pTempMesh)
+	{
+		s_pTempMesh = MeshManager::get().GetMeshData("cube.itpmesh");
+		MeshData* pMesh2 = MeshManager::get().GetMeshData("cube.itpmesh");
+		Dbg_Assert(s_pTempMesh == pMesh2, "GetMeshData reallocated cube. :(");
+	}
+	// END TEMP CODE
 
 	// Clear the back buffer and zBuffer.
 	m_pDevice->Clear(0, NULL, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER,
@@ -74,7 +90,21 @@ void GraphicsDevice::Render()
 	// Begin the scene.
 	if (SUCCEEDED(m_pDevice->BeginScene()))
 	{
-		// Rendering of scene objects can happen here.
+		// Rendering of scene objects can happen here:
+		// Set camera/projection matrices.
+		Matrix4 mViewProj(m_ProjectionMtx);
+		mViewProj.Multiply(m_CameraMtx);
+		m_pDebugEffect->SetMatrix("gViewProj", static_cast<D3DXMATRIX*>(mViewProj.ToD3D()));
+
+		// BEGIN TEMP CODE
+		Matrix4 WorldTransform;
+		WorldTransform.CreateRotationY(0.785398163f);
+		m_pDebugEffect->SetMatrix("gWorld", static_cast<D3DXMATRIX*>(WorldTransform.ToD3D()));
+
+		D3DXHANDLE hTechnique = m_pDebugEffect->GetTechniqueByName("DefaultTechnique");
+
+		s_pTempMesh->Draw(m_pDebugEffect, hTechnique);
+		// END TEMP CODE
 
 		// End the scene.
 		m_pDevice->EndScene();

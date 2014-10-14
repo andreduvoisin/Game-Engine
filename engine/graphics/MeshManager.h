@@ -2,7 +2,7 @@
 #ifndef _MESHMANAGER_H_
 #define _MESHMANAGER_H_
 #include "../core/singleton.h"
-#include <map>
+#include <unordered_map>
 
 namespace ITP485
 {
@@ -29,7 +29,7 @@ private:
 	// Helper function which hashes the passed string using djb2 algorithm
 	unsigned int HashString(const char* str);
 
-	std::map<unsigned int, MeshData*> m_MeshMap;
+	std::unordered_map<std::string, MeshData*> m_MeshMap;
 };
 
 } // namespace
