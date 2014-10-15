@@ -2,6 +2,11 @@
 #include "GameWorld.h"
 #include "GameObject.h"
 #include "../ini/minIni.h"
+#include "../core/dbg_assert.h"
+
+#ifdef _DEBUG
+#include <fstream>
+#endif
 
 namespace ITP485
 {
@@ -46,9 +51,26 @@ void GameWorld::Update(float fDelta)
 // Returns true if succeeded
 bool GameWorld::LoadLevel(const char* szLevelFile)
 {
-	GameObject* pGameObject = new GameObject();
-	pGameObject->Spawn("cube.itpmesh");
-	m_GameObjects.insert(pGameObject);
+#ifdef _DEBUG
+	// Check if the file exists.
+	std::ifstream file(szLevelFile);
+	Dbg_Assert(file.good(), "Specified LoadLevel .ini file not found.");
+	file.close();
+#endif
+
+	// Read in the .ini file.
+	minIni iniReader(szLevelFile);
+	int i = 0;
+	std::string section = iniReader.getsection(i++);
+	while (section != "")
+	{
+		GameObject* pGameObject = new GameObject();
+		pGameObject->Spawn(section, iniReader);
+		m_GameObjects.insert(pGameObject);
+
+		section = iniReader.getsection(i++);
+	}
+	
 	return true;
 }
 

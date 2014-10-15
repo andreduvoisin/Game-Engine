@@ -3,6 +3,7 @@
 #define _GAMEOBJECT_H_
 
 #include <string>
+#include "../ini/minIni.h"
 
 namespace ITP485
 {
@@ -20,7 +21,7 @@ public:
 
 	// Spawn this object based on ObjectName
 	// Returns true if successfully spawned
-	virtual bool Spawn(std::string sObjectName);
+	virtual bool Spawn(std::string sObjectName, minIni& iniReader);
 
 	// Update this GameObject
 	virtual void Update(float fDelta);
