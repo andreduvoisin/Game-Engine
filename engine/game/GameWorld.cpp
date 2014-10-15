@@ -3,6 +3,8 @@
 #include "GameObject.h"
 #include "../ini/minIni.h"
 #include "../core/dbg_assert.h"
+#include "../core/math.h"
+#include "../graphics/GraphicsDevice.h"
 
 #ifdef _DEBUG
 #include <fstream>
@@ -64,9 +66,46 @@ bool GameWorld::LoadLevel(const char* szLevelFile)
 	std::string section = iniReader.getsection(i++);
 	while (section != "")
 	{
-		GameObject* pGameObject = new GameObject();
-		pGameObject->Spawn(section, iniReader);
-		m_GameObjects.insert(pGameObject);
+		if (section == "Camera")
+		{
+			// Special case for [Camera].
+			std::string input;
+			float x, y, z;
+			Vector3 vEye, vAt, vUp;
+
+			input = iniReader.gets(section, "Eye");
+			sscanf_s(input.c_str(), "(%f,%f,%f)", &x, &y, &z);
+			vEye.Set(x, y, z);
+
+			input = iniReader.gets(section, "At");
+			sscanf_s(input.c_str(), "(%f,%f,%f)", &x, &y, &z);
+			vAt.Set(x, y, z);
+
+			input = iniReader.gets(section, "Up");
+			sscanf_s(input.c_str(), "(%f,%f,%f)", &x, &y, &z);
+			vUp.Set(x, y, z);
+
+			GraphicsDevice::get().GetCameraMatrix().CreateLookAt(vEye, vAt, vUp);
+		}
+		else if (section == "Projection")
+		{
+			// Special case for [Projection].
+			float fFOVy, fAspectRatio, fNearZ, fFarZ;
+
+			fFOVy = iniReader.getf(section, "FOVy");
+			fAspectRatio = iniReader.getf(section, "AspectRatio");
+			fNearZ = iniReader.getf(section, "NearZ");
+			fFarZ = iniReader.getf(section, "FarZ");
+
+			GraphicsDevice::get().GetProjectionMatrix().CreatePerspectiveFOV(fFOVy, fAspectRatio, fNearZ, fFarZ);
+		}
+		else
+		{
+			// Everything else.
+			GameObject* pGameObject = new GameObject();
+			pGameObject->Spawn(section, iniReader);
+			m_GameObjects.insert(pGameObject);
+		}
 
 		section = iniReader.getsection(i++);
 	}

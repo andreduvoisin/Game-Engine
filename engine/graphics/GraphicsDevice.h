@@ -31,6 +31,13 @@ public:
 
 	// Returns the debug effect
 	LPD3DXEFFECT GetDebugEffect() { return m_pDebugEffect; }
+
+	// Returns m_CameraMtx by reference, so you can modify it.
+	Matrix4& GetCameraMatrix() { return m_CameraMtx; }
+
+	// Returns m_ProjectionMtx by reference, so you can modify it.
+	Matrix4& GetProjectionMatrix() { return m_ProjectionMtx; }
+
 protected:
 	// Default constructor does nothing other than set some pointers to 0
 	GraphicsDevice()

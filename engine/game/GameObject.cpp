@@ -45,9 +45,10 @@ bool GameObject::Spawn(std::string sObjectName, minIni& iniReader)
 			Quaternion yawQuat(Vector3::UnitY, yaw);
 			Quaternion pitchQuat(Vector3::UnitX, pitch);
 			Quaternion rollQuat(Vector3::UnitZ, roll);
-			m_pMeshComponent->GetQuaternion() = yawQuat;
-			m_pMeshComponent->GetQuaternion().Multiply(pitchQuat);
-			m_pMeshComponent->GetQuaternion().Multiply(rollQuat);
+			Quaternion& meshComponentQuat = m_pMeshComponent->GetQuaternion();
+			meshComponentQuat = yawQuat;
+			meshComponentQuat.Multiply(pitchQuat);
+			meshComponentQuat.Multiply(rollQuat);
 		}
 
 		float scale = iniReader.getf(sObjectName, "Scale");
@@ -64,10 +65,7 @@ bool GameObject::Spawn(std::string sObjectName, minIni& iniReader)
 // Update this GameObject
 void GameObject::Update(float fDelta)
 {
-	/*
-	Quaternion rotationQuaternion(Vector3::UnitY, Pi / 2 * fDelta);
-	m_pMeshComponent->GetQuaternion().Multiply(rotationQuaternion);
-	*/
+
 }
 
 }
