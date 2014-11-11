@@ -99,6 +99,17 @@ bool GameWorld::LoadLevel(const char* szLevelFile)
 
 			GraphicsDevice::get().GetProjectionMatrix().CreatePerspectiveFOV(fFOVy, fAspectRatio, fNearZ, fFarZ);
 		}
+		else if (section == "Ambient")
+		{
+			// Special case for [Ambient].
+			std::string input;
+			float x, y, z, w;
+
+			input = iniReader.gets(section, "Color");
+			sscanf_s(input.c_str(), "(%f,%f,%f,%f)", &x, &y, &z, &w);
+
+			GraphicsDevice::get().SetAmbientColor(D3DXVECTOR4(x, y, z, w));
+		}
 		else
 		{
 			// Everything else.

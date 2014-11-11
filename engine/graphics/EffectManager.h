@@ -28,6 +28,9 @@ public:
 	// Iterates through the map and sets the viewProj matrix for each effect.
 	void SetViewProjMatrix(Matrix4& viewProj);
 
+	// Iterates through the map and sets the AmbientColor vector4 for each effect.
+	void SetAmbientColor(D3DXVECTOR4& color);
+
 private:
 	std::unordered_map<std::string, LPD3DXEFFECT> m_EffectMap;
 };

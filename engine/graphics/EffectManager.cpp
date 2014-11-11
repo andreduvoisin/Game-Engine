@@ -50,4 +50,13 @@ void EffectManager::SetViewProjMatrix(Matrix4& viewProj)
 	}
 }
 
+// Iterates through the map and sets the AmbientColor vector4 for each effect.
+void EffectManager::SetAmbientColor(D3DXVECTOR4& color)
+{
+	for (auto it = m_EffectMap.begin(); it != m_EffectMap.end(); ++it)
+	{
+		it->second->SetVector("AmbientColor", &color);
+	}
+}
+
 }

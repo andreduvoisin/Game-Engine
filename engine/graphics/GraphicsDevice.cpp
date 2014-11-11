@@ -84,10 +84,14 @@ void GraphicsDevice::Render()
 	if (SUCCEEDED(m_pDevice->BeginScene()))
 	{
 		// Rendering of scene objects can happen here:
+
 		// Set camera/projection matrices.
 		Matrix4 mViewProj(m_ProjectionMtx);
 		mViewProj.Multiply(m_CameraMtx);
 		EffectManager::get().SetViewProjMatrix(mViewProj);
+
+		// Set the ambient color of our effects.
+		EffectManager::get().SetAmbientColor(m_AmbientColor);
 
 		// Draw all MeshComponents.
 		for (MeshComponent* pMeshComponent : m_MeshComponentSet)

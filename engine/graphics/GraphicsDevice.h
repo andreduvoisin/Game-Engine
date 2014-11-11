@@ -35,6 +35,10 @@ public:
 	// Returns m_ProjectionMtx by reference, so you can modify it.
 	Matrix4& GetProjectionMatrix() { return m_ProjectionMtx; }
 
+	// Getter/setter for ambient light color.
+	D3DXVECTOR4& GetAmbientColor() { return m_AmbientColor; }
+	void SetAmbientColor(const D3DXVECTOR4& color) { m_AmbientColor = color; }
+
 	// Given an effect file.
 	LPD3DXEFFECT LoadEffect(const char* szFileName);
 
@@ -49,6 +53,9 @@ protected:
 	Matrix4 m_CameraMtx;
 	// Projection matrix
 	Matrix4 m_ProjectionMtx;
+
+	// Ambient light color.
+	D3DXVECTOR4 m_AmbientColor;
 
 	// Direct3D9 interface pointer
 	LPDIRECT3D9 m_pD3D;
