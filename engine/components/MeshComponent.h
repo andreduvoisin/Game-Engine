@@ -3,6 +3,7 @@
 #define _MESHCOMPONENT_H_
 #include "../core/poolalloc.h"
 #include "../core/math.h"
+#include <d3dx9effect.h>
 
 namespace ITP485
 {
@@ -40,6 +41,9 @@ public:
 	// Returns m_TranslationVector by reference, so you can modify it.
 	Vector3& GetTranslationVector() { return m_TranslationVector; }
 
+	LPD3DXEFFECT GetEffectData() const { return m_pEffectData; }
+	void SetEffectData(LPD3DXEFFECT value) { m_pEffectData = value; }
+
 	float GetScale() const { return m_Scale; }
 	void SetScale(float value) { m_Scale = value; }
 
@@ -57,6 +61,8 @@ private:
 	Vector3 m_TranslationVector;
 	// Our particular model information
 	MeshData* m_pMeshData;
+	// Our effect information
+	LPD3DXEFFECT m_pEffectData;
 	// float (for uniform scale)
 	float m_Scale;
 	// Whether or not this guy is visible

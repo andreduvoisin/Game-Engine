@@ -36,10 +36,9 @@ void MeshComponent::Draw()
 		tempMatrix.CreateScale(m_Scale);
 		m_WorldTransform.Multiply(tempMatrix);
 
-		auto pDebugEffect = GraphicsDevice::get().GetDebugEffect();
-		pDebugEffect->SetMatrix("gWorld", static_cast<D3DXMATRIX*>(m_WorldTransform.ToD3D()));
-		D3DXHANDLE hTechnique = pDebugEffect->GetTechniqueByName("DefaultTechnique");
-		m_pMeshData->Draw(pDebugEffect, hTechnique);
+		m_pEffectData->SetMatrix("gWorld", static_cast<D3DXMATRIX*>(m_WorldTransform.ToD3D()));
+		D3DXHANDLE hTechnique = m_pEffectData->GetTechniqueByName("DefaultTechnique");
+		m_pMeshData->Draw(m_pEffectData, hTechnique);
 	}
 }
 

@@ -1,6 +1,7 @@
 // Implementations for GameObject
 #include "GameObject.h"
 #include "../components/MeshComponent.h"
+#include "../graphics/EffectManager.h"
 
 namespace ITP485
 {
@@ -29,6 +30,13 @@ bool GameObject::Spawn(std::string sObjectName, minIni& iniReader)
 	{
 		m_pMeshComponent = new MeshComponent(input.c_str());
 		
+		input = iniReader.gets(sObjectName, "Effect");
+		if (input != "")
+		{
+			LPD3DXEFFECT effectData = EffectManager::get().GetEffectData(input.c_str());
+			m_pMeshComponent->SetEffectData(effectData);
+		}
+
 		input = iniReader.gets(sObjectName, "Position");
 		if (input != "")
 		{

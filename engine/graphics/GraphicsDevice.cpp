@@ -1,9 +1,11 @@
 #include "GraphicsDevice.h"
 #include "../core/dbg_assert.h"
 #include "MeshManager.h"
+#include "EffectManager.h"
 #include "MeshData.h"
 #include "../Components/MeshComponent.h"
 #include <fstream>
+#include <iostream>
 
 namespace ITP485
 {
@@ -35,16 +37,14 @@ void GraphicsDevice::Setup(HWND hWnd)
 	// Turn on the zBuffer.
 	m_pDevice->SetRenderState(D3DRS_ZENABLE, TRUE);
 
-	// Load debug effect.
-	m_pDebugEffect = LoadEffect("blue.fx");
-
 	// Setup camera and projection matrices.
 	m_CameraMtx.CreateLookAt(Vector3(0.0f, 3.0f, -5.0f),
 		Vector3(0.0f, 0.0f, 0.0f), Vector3(0.0f, 1.0f, 0.0f));
 	m_ProjectionMtx.CreatePerspectiveFOV(0.78539816f, 1.333333f, 1.0f, 100.0f);
 
-	// Setup the MeshManager.
+	// Setup the MeshManager and EffectManager.
 	MeshManager::get().Setup();
+	EffectManager::get().Setup();
 
 	// Setup the MeshComponent pool.
 	MeshComponentPool::get().StartUp();
@@ -56,11 +56,6 @@ void GraphicsDevice::Cleanup()
 	// Cleanup the MeshComponent pool.
 	MeshComponentPool::get().ShutDown();
 
-	if (m_pDebugEffect)
-	{
-		m_pDebugEffect->Release();
-	}
-
 	if (m_pDevice)
 	{
 		m_pDevice->Release();
@@ -71,8 +66,9 @@ void GraphicsDevice::Cleanup()
 		m_pD3D->Release();
 	}
 
-	// Cleanup the MeshManager.
+	// Cleanup the MeshManager and EffectManager.
 	MeshManager::get().Cleanup();
+	EffectManager::get().Cleanup();
 }
 
 // Renders the current frame
@@ -91,7 +87,7 @@ void GraphicsDevice::Render()
 		// Set camera/projection matrices.
 		Matrix4 mViewProj(m_ProjectionMtx);
 		mViewProj.Multiply(m_CameraMtx);
-		m_pDebugEffect->SetMatrix("gViewProj", static_cast<D3DXMATRIX*>(mViewProj.ToD3D()));
+		EffectManager::get().SetViewProjMatrix(mViewProj);
 
 		// Draw all MeshComponents.
 		for (MeshComponent* pMeshComponent : m_MeshComponentSet)

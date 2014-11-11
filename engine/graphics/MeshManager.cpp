@@ -5,7 +5,7 @@
 namespace ITP485
 {
 
-// Does nothing of note for now
+// Does nothing of note for now.
 void MeshManager::Setup()
 {
 
@@ -22,7 +22,7 @@ void MeshManager::Cleanup()
 	m_MeshMap.clear();
 }
 
-// Searches the std::map for the requested mesh. If it exists, that
+// Searches the std::unordered_map for the requested mesh. If it exists, that
 // MeshData is returned.
 // If the MeshData isn't already loaded for it, will construct a MeshData
 // using new, add that pointer to the hash map, and then return that pointer

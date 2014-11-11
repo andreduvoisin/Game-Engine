@@ -29,21 +29,20 @@ public:
 	// Returns the D3D device pointer
 	LPDIRECT3DDEVICE9 GetD3DDevice() { return m_pDevice; }
 
-	// Returns the debug effect
-	LPD3DXEFFECT GetDebugEffect() { return m_pDebugEffect; }
-
 	// Returns m_CameraMtx by reference, so you can modify it.
 	Matrix4& GetCameraMatrix() { return m_CameraMtx; }
 
 	// Returns m_ProjectionMtx by reference, so you can modify it.
 	Matrix4& GetProjectionMatrix() { return m_ProjectionMtx; }
 
+	// Given an effect file.
+	LPD3DXEFFECT LoadEffect(const char* szFileName);
+
 protected:
 	// Default constructor does nothing other than set some pointers to 0
 	GraphicsDevice()
 		: m_pD3D(nullptr)
 		, m_pDevice(nullptr)
-		, m_pDebugEffect(nullptr)
 	{ }
 
 	// Camera matrix
@@ -55,9 +54,6 @@ protected:
 	LPDIRECT3D9 m_pD3D;
 	// Direct3D9 device pointer
 	LPDIRECT3DDEVICE9 m_pDevice;
-
-	// Global effect we use
-	LPD3DXEFFECT m_pDebugEffect;
 
 	// Set of all active MeshComponents
 	std::set<MeshComponent*> m_MeshComponentSet;
@@ -71,8 +67,6 @@ protected:
 	{
 		_aligned_free(ptr);
 	}
-
-	LPD3DXEFFECT LoadEffect(const char* szFileName);
 };
 
 }

@@ -37,6 +37,9 @@
     <ClCompile Include="..\engine\components\AnimComponent.cpp">
       <Filter>Components</Filter>
     </ClCompile>
+    <ClCompile Include="..\engine\graphics\EffectManager.cpp">
+      <Filter>Graphics</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\engine\core\dbg_assert.h">
@@ -83,6 +86,9 @@
     </ClInclude>
     <ClInclude Include="..\engine\components\AnimComponent.h">
       <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="..\engine\graphics\EffectManager.h">
+      <Filter>Graphics</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
