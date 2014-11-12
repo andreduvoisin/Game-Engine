@@ -52,7 +52,7 @@ VS_OUTPUT VS_Phong(VS_INPUT IN)
 	OUT.vPos = mul(gViewProj, float4(OUT.vWorldPos, 1.0f));
 
 	// Set the output normal.
-	OUT.vNormal = mul(gWorld, float4(IN.vNormal, 1.0f));
+	OUT.vNormal = mul(gWorld, float4(IN.vNormal, 0.0f));
 	OUT.vNormal = normalize(OUT.vNormal);
 	// Set the output UV.
 	OUT.vUV = IN.vUV;
