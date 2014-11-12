@@ -93,6 +93,9 @@ void GraphicsDevice::Render()
 		// Set the ambient color of our effects.
 		EffectManager::get().SetAmbientColor(m_AmbientColor);
 
+		// Set the point lights in our effects.
+		EffectManager::get().SetPointLights(m_PointLights);
+
 		// Draw all MeshComponents.
 		for (MeshComponent* pMeshComponent : m_MeshComponentSet)
 		{
@@ -105,6 +108,11 @@ void GraphicsDevice::Render()
 
 	// Present the back buffer contents to the display.
 	m_pDevice->Present(NULL, NULL, NULL, NULL);
+}
+
+void GraphicsDevice::AddPointLight(PointLight* light)
+{
+	m_PointLights.insert(light);
 }
 
 LPD3DXEFFECT GraphicsDevice::LoadEffect( const char* szFileName )

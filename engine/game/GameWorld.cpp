@@ -1,6 +1,7 @@
 // Implementations for GameWorld
 #include "GameWorld.h"
 #include "GameObject.h"
+#include "PointLight.h"
 #include "../ini/minIni.h"
 #include "../core/dbg_assert.h"
 #include "../core/math.h"
@@ -99,7 +100,7 @@ bool GameWorld::LoadLevel(const char* szLevelFile)
 
 			GraphicsDevice::get().GetProjectionMatrix().CreatePerspectiveFOV(fFOVy, fAspectRatio, fNearZ, fFarZ);
 		}
-		else if (section == "Ambient")
+		else if (section == "AmbientLight")
 		{
 			// Special case for [Ambient].
 			std::string input;
@@ -109,6 +110,12 @@ bool GameWorld::LoadLevel(const char* szLevelFile)
 			sscanf_s(input.c_str(), "(%f,%f,%f,%f)", &x, &y, &z, &w);
 
 			GraphicsDevice::get().SetAmbientColor(D3DXVECTOR4(x, y, z, w));
+		}
+		else if (section.find("PointLight") != std::string::npos)
+		{
+			PointLight* pPointLight = new PointLight();
+			pPointLight->Spawn(section, iniReader);
+			GraphicsDevice::get().AddPointLight(pPointLight);
 		}
 		else
 		{

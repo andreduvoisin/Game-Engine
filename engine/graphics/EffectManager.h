@@ -4,9 +4,12 @@
 #include <d3dx9effect.h>
 #include <unordered_map>
 #include "../core/math.h"
+#include <set>
 
 namespace ITP485
 {
+
+class PointLight;
 
 class EffectManager : public Singleton<EffectManager>
 {
@@ -30,6 +33,9 @@ public:
 
 	// Iterates through the map and sets the AmbientColor vector4 for each effect.
 	void SetAmbientColor(D3DXVECTOR4& color);
+
+	// Iterates through the map and sets up to 4 PointLights for each effect.
+	void SetPointLights(std::set<PointLight*>& lights);
 
 private:
 	std::unordered_map<std::string, LPD3DXEFFECT> m_EffectMap;

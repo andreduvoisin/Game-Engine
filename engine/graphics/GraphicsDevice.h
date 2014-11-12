@@ -11,6 +11,8 @@
 namespace ITP485
 {
 
+class PointLight;
+
 class GraphicsDevice : public Singleton<GraphicsDevice>
 {
 	friend class MeshComponent;
@@ -39,6 +41,9 @@ public:
 	D3DXVECTOR4& GetAmbientColor() { return m_AmbientColor; }
 	void SetAmbientColor(const D3DXVECTOR4& color) { m_AmbientColor = color; }
 
+	// Adds a PointLight to the PointLight set.
+	void AddPointLight(PointLight* light);
+
 	// Given an effect file.
 	LPD3DXEFFECT LoadEffect(const char* szFileName);
 
@@ -64,6 +69,9 @@ protected:
 
 	// Set of all active MeshComponents
 	std::set<MeshComponent*> m_MeshComponentSet;
+
+	// Set of all PointLights
+	std::set<PointLight*> m_PointLights;
 
 	// Force alignment so our matrices don't explode unhappily
 	void* operator new(size_t size)

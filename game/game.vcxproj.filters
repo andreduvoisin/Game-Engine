@@ -40,6 +40,9 @@
     <ClCompile Include="..\engine\graphics\EffectManager.cpp">
       <Filter>Graphics</Filter>
     </ClCompile>
+    <ClCompile Include="..\engine\game\PointLight.cpp">
+      <Filter>Game</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\engine\core\dbg_assert.h">
@@ -89,6 +92,9 @@
     </ClInclude>
     <ClInclude Include="..\engine\graphics\EffectManager.h">
       <Filter>Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="..\engine\game\PointLight.h">
+      <Filter>Game</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

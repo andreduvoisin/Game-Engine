@@ -1,5 +1,6 @@
 #include "EffectManager.h"
 #include "GraphicsDevice.h"
+#include "../game/PointLight.h"
 
 namespace ITP485
 {
@@ -56,6 +57,38 @@ void EffectManager::SetAmbientColor(D3DXVECTOR4& color)
 	for (auto it = m_EffectMap.begin(); it != m_EffectMap.end(); ++it)
 	{
 		it->second->SetVector("AmbientColor", &color);
+	}
+}
+
+void EffectManager::SetPointLights(std::set<PointLight*>& lights)
+{
+	for (auto it = m_EffectMap.begin(); it != m_EffectMap.end(); ++it)
+	{
+		int lightNum = 0;
+		for (PointLight* light : lights)
+		{
+			std::string handle;
+
+			handle = "PointLights[" + std::to_string(lightNum) + "].DiffuseColor";
+			it->second->SetVector(handle.c_str(), &(light->m_DiffuseColor));
+
+			handle = "PointLights[" + std::to_string(lightNum) + "].SpecularColor";
+			it->second->SetVector(handle.c_str(), &(light->m_SpecularColor));
+
+			handle = "PointLights[" + std::to_string(lightNum) + "].Position";
+			it->second->SetValue(handle.c_str(), &(light->m_Position), 12);
+
+			handle = "PointLights[" + std::to_string(lightNum) + "].SpecularPower";
+			it->second->SetFloat(handle.c_str(), light->m_SpecularPower);
+
+			handle = "PointLights[" + std::to_string(lightNum) + "].InnerRadius";
+			it->second->SetFloat(handle.c_str(), light->m_InnerRadius);
+
+			handle = "PointLights[" + std::to_string(lightNum) + "].OuterRadius";
+			it->second->SetFloat(handle.c_str(), light->m_OuterRadius);
+
+			++lightNum;
+		}
 	}
 }
 
