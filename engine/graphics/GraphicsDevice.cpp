@@ -69,6 +69,13 @@ void GraphicsDevice::Cleanup()
 	// Cleanup the MeshManager and EffectManager.
 	MeshManager::get().Cleanup();
 	EffectManager::get().Cleanup();
+
+	// Clean up the PointLight set.
+	for (PointLight* light : m_PointLights)
+	{
+		delete light;
+	}
+	m_PointLights.clear();
 }
 
 // Renders the current frame
