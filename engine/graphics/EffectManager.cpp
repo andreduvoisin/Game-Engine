@@ -92,4 +92,12 @@ void EffectManager::SetPointLights(std::set<PointLight*>& lights)
 	}
 }
 
+void EffectManager::SetCameraPosition(Vector3& pos)
+{
+	for (auto it = m_EffectMap.begin(); it != m_EffectMap.end(); ++it)
+	{
+		it->second->SetValue("CameraPosition", &pos, 12);
+	}
+}
+
 }

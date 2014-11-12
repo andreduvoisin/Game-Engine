@@ -37,6 +37,9 @@ public:
 	// Returns m_ProjectionMtx by reference, so you can modify it.
 	Matrix4& GetProjectionMatrix() { return m_ProjectionMtx; }
 
+	// Returns m_vCameraPosition by reference, so you can modify it.
+	Vector3& GetCameraPosition() { return m_vCameraPosition; }
+
 	// Getter/setter for ambient light color.
 	D3DXVECTOR4& GetAmbientColor() { return m_AmbientColor; }
 	void SetAmbientColor(const D3DXVECTOR4& color) { m_AmbientColor = color; }
@@ -58,6 +61,9 @@ protected:
 	Matrix4 m_CameraMtx;
 	// Projection matrix
 	Matrix4 m_ProjectionMtx;
+
+	// Camera position
+	Vector3 m_vCameraPosition;
 
 	// Ambient light color.
 	D3DXVECTOR4 m_AmbientColor;

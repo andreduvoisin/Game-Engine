@@ -86,6 +86,7 @@ bool GameWorld::LoadLevel(const char* szLevelFile)
 			sscanf_s(input.c_str(), "(%f,%f,%f)", &x, &y, &z);
 			vUp.Set(x, y, z);
 
+			GraphicsDevice::get().GetCameraPosition() = vEye;
 			GraphicsDevice::get().GetCameraMatrix().CreateLookAt(vEye, vAt, vUp);
 		}
 		else if (section == "Projection")

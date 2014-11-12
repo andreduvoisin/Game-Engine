@@ -96,6 +96,9 @@ void GraphicsDevice::Render()
 		// Set the point lights in our effects.
 		EffectManager::get().SetPointLights(m_PointLights);
 
+		// Set the camera position for our effects.
+		EffectManager::get().SetCameraPosition(m_vCameraPosition);
+
 		// Draw all MeshComponents.
 		for (MeshComponent* pMeshComponent : m_MeshComponentSet)
 		{
@@ -125,7 +128,7 @@ LPD3DXEFFECT GraphicsDevice::LoadEffect( const char* szFileName )
 #endif
 	// Setup flags
 	ID3DXBuffer *pCompilationErrors = 0;
-	DWORD dwShaderFlags = D3DXFX_NOT_CLONEABLE | D3DXSHADER_NO_PRESHADER;
+	DWORD dwShaderFlags = D3DXFX_NOT_CLONEABLE | D3DXSHADER_NO_PRESHADER | D3DXSHADER_DEBUG;
 	LPD3DXEFFECT pEffect;
 
 	// Create Effect

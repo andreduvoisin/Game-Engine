@@ -37,6 +37,9 @@ public:
 	// Iterates through the map and sets up to 4 PointLights for each effect.
 	void SetPointLights(std::set<PointLight*>& lights);
 
+	// Iterates through the map and sets the CameraPosition for each effect.
+	void SetCameraPosition(Vector3& pos);
+
 private:
 	std::unordered_map<std::string, LPD3DXEFFECT> m_EffectMap;
 };
