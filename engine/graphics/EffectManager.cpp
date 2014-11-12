@@ -31,11 +31,11 @@ LPD3DXEFFECT EffectManager::GetEffectData(const char* szEffectFile)
 	auto it = m_EffectMap.find(szEffectFile);
 	if (it != m_EffectMap.end())
 	{
-		// We found it! Return the MeshData*.
+		// We found it! Return the LPD3DXEFFECT.
 		return it->second;
 	}
 
-	// Doesn't exist in our m_MeshMap. Create the MeshData*.
+	// Doesn't exist in our m_EffectMap. Create the LPD3DXEFFECT.
 	LPD3DXEFFECT effectData = GraphicsDevice::get().LoadEffect(szEffectFile);
 	m_EffectMap[szEffectFile] = effectData;
 	return effectData;
