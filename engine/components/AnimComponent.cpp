@@ -80,7 +80,7 @@ void AnimComponent::Update( float fDelta )
 
 void AnimComponent::StoreMatrixPalette( ID3DXEffect* pEffect )
 {
-
+	pEffect->SetMatrixArray("gPalette", static_cast<D3DXMATRIX*>(m_Palette->ToD3D()), 32);
 }
 
 

@@ -1,4 +1,5 @@
 #include "MeshComponent.h"
+#include "AnimComponent.h"
 #include "../graphics/MeshManager.h"
 #include "../graphics/GraphicsDevice.h"
 #include "../graphics/MeshData.h"
@@ -39,6 +40,10 @@ void MeshComponent::Draw()
 
 		m_pEffectData->SetMatrix("gWorld", static_cast<D3DXMATRIX*>(m_WorldTransform.ToD3D()));
 		D3DXHANDLE hTechnique = m_pEffectData->GetTechniqueByName("DefaultTechnique");
+		if (m_pAnimComponent != nullptr)
+		{
+			m_pAnimComponent->StoreMatrixPalette(m_pEffectData);
+		}
 		m_pMeshData->Draw(m_pEffectData, hTechnique);
 	}
 }
