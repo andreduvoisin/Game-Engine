@@ -16,9 +16,10 @@ AnimComponent::AnimComponent( const char* szFileName )
 
 void AnimComponent::InitializeData()
 {
-	// Calculate the inverse bind pose matrix for each joint.
 	// Error check.
 	Dbg_Assert(m_Skeleton.m_iNumJoints > 0, "No joints in m_Skeleton!");
+
+	// Calculate the inverse bind pose matrix for each joint.
 	// For the first joint (root), we just invert local pose.
 	m_Skeleton.m_pJoints[0].inv_bindPose = m_Skeleton.m_pJoints[0].localPose;
 	// For every other joint, we multiply up the chain.
@@ -31,6 +32,25 @@ void AnimComponent::InitializeData()
 	for (short i = 0; i < m_Skeleton.m_iNumJoints; ++i)
 	{
 		m_Skeleton.m_pJoints[i].inv_bindPose.Invert();
+	}
+
+	// Set up the initial pose.
+	for (short i = 0; i < m_Skeleton.m_iNumJoints; ++i)
+	{
+		m_Pose.m_pPoses[i].localPose = m_CurrAnimation.m_pKeyFrames[i][0].localPose;
+	}
+
+	// Set up the matrix pallette.
+	m_Palette[0] = m_Pose.m_pPoses[0].localPose;
+	for (short i = 1; i < m_Skeleton.m_iNumJoints; ++i)
+	{
+		m_Palette[i] = m_Palette[m_Skeleton.m_pJoints[i].m_ParentIndex];
+		m_Palette[i].Multiply(m_Pose.m_pPoses[i].localPose);
+	}
+	// Multiply by inverse bind pose at the end.
+	for (short i = 0; i < m_Skeleton.m_iNumJoints; ++i)
+	{
+		m_Palette[i].Multiply(m_Skeleton.m_pJoints[i].inv_bindPose);
 	}
 }
 
