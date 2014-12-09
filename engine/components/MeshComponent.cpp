@@ -15,6 +15,7 @@ namespace ITP485
 MeshComponent::MeshComponent(const char* szFileName)
 {
 	m_pMeshData = MeshManager::get().GetMeshData(szFileName);
+	m_pAnimComponent = nullptr;
 	m_WorldTransform = Matrix4::Identity;
 	m_Quaternion = Quaternion::Identity;
 	m_TranslationVector = Vector3::Zero;

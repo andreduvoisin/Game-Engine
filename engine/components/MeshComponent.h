@@ -8,8 +8,9 @@
 namespace ITP485
 {
 
-typedef PoolAllocator<112, 1024> MeshComponentPool;
+typedef PoolAllocator<128, 1024> MeshComponentPool;
 struct MeshData;
+class AnimComponent;
 
 class MeshComponent
 {
@@ -44,6 +45,8 @@ public:
 	LPD3DXEFFECT GetEffectData() const { return m_pEffectData; }
 	void SetEffectData(LPD3DXEFFECT value) { m_pEffectData = value; }
 
+	void SetAnimComponent(AnimComponent* anim) { m_pAnimComponent = anim; }
+
 	float GetScale() const { return m_Scale; }
 	void SetScale(float value) { m_Scale = value; }
 
@@ -61,6 +64,8 @@ private:
 	Vector3 m_TranslationVector;
 	// Our particular model information
 	MeshData* m_pMeshData;
+	// Our animation information
+	AnimComponent* m_pAnimComponent;
 	// Our effect information
 	LPD3DXEFFECT m_pEffectData;
 	// float (for uniform scale)

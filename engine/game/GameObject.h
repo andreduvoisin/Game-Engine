@@ -9,6 +9,7 @@ namespace ITP485
 {
 
 class MeshComponent;
+class AnimComponent;
 
 class GameObject
 {
@@ -31,6 +32,7 @@ protected:
 	std::string m_sObjectName;
 	// Component pointers
 	MeshComponent* m_pMeshComponent;
+	AnimComponent* m_pAnimComponent;
 };
 
 }

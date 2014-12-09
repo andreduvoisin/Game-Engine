@@ -1,6 +1,7 @@
 // Implementations for GameObject
 #include "GameObject.h"
 #include "../components/MeshComponent.h"
+#include "../components/AnimComponent.h"
 #include "../graphics/EffectManager.h"
 
 namespace ITP485
@@ -9,7 +10,8 @@ namespace ITP485
 // Sets component pointers to NULL
 GameObject::GameObject()
 {
-	m_pMeshComponent = NULL;
+	m_pMeshComponent = nullptr;
+	m_pAnimComponent = nullptr;
 }
 
 // Deletes any components which were initialized
@@ -35,6 +37,13 @@ bool GameObject::Spawn(std::string sObjectName, minIni& iniReader)
 		{
 			LPD3DXEFFECT effectData = EffectManager::get().GetEffectData(input.c_str());
 			m_pMeshComponent->SetEffectData(effectData);
+		}
+
+		input = iniReader.gets(sObjectName, "Animation");
+		if (input != "")
+		{
+			m_pAnimComponent = new AnimComponent(input.c_str());
+			m_pMeshComponent->SetAnimComponent(m_pAnimComponent);
 		}
 
 		input = iniReader.gets(sObjectName, "Position");
@@ -73,7 +82,10 @@ bool GameObject::Spawn(std::string sObjectName, minIni& iniReader)
 // Update this GameObject
 void GameObject::Update(float fDelta)
 {
-
+	if (m_pAnimComponent != nullptr)
+	{
+		m_pAnimComponent->Update(fDelta);
+	}
 }
 
 }

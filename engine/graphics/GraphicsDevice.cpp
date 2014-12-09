@@ -4,6 +4,7 @@
 #include "EffectManager.h"
 #include "MeshData.h"
 #include "../Components/MeshComponent.h"
+#include "../components/AnimComponent.h"
 #include <fstream>
 #include <iostream>
 
@@ -46,15 +47,17 @@ void GraphicsDevice::Setup(HWND hWnd)
 	MeshManager::get().Setup();
 	EffectManager::get().Setup();
 
-	// Setup the MeshComponent pool.
+	// Setup the pools.
 	MeshComponentPool::get().StartUp();
+	KeyFramePool::get().StartUp();
 }
 
 // Releases all D3D resources
 void GraphicsDevice::Cleanup()
 {
-	// Cleanup the MeshComponent pool.
+	// Cleanup the pools.
 	MeshComponentPool::get().ShutDown();
+	KeyFramePool::get().ShutDown();
 
 	if (m_pDevice)
 	{
