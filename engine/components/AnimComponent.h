@@ -170,6 +170,9 @@ private:
 
 	// Parses in the file information
 	void Parse(const char* szFileName);
+
+	// Helper function to calculate the pose given two frames.
+	void CalculatePose(short joint, KeyFrame* frame1, KeyFrame* frame2);
 };
 
 } // end namespace

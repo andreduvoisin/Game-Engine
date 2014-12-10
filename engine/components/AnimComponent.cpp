@@ -73,16 +73,99 @@ AnimComponent::~AnimComponent()
 	_aligned_free(m_Palette);
 }
 
+void AnimComponent::CalculatePose(short joint, KeyFrame* frame1, KeyFrame* frame2)
+{
+	// Local current pose matrix for that joint.
+	if (frame1 == frame2)
+	{
+		m_Pose.m_pPoses[joint].localPose = frame1->localPose;
+	}
+	else
+	{
+		// Interpolate between the two frame times.
+		float time1 = float(frame1->m_FrameNum) / 24.0f;
+		float time2;
+		if (frame1->m_FrameNum > frame2->m_FrameNum)
+		{
+			// Loops back to frame 0.
+			time2 = float(m_CurrAnimation.m_NumFrames) / 24.0f;
+		}
+		else
+		{
+			// Standard case.
+			time2 = float(frame2->m_FrameNum) / 24.0f;
+		}
+
+		m_Pose.m_pPoses[joint].localPose = Lerp(
+			frame1->localPose,
+			frame2->localPose,
+			((m_CurrAnimation.m_Time - time1) / (time2 - time1)));
+	}
+
+	// Update matrix palette with global current pose.
+	if (m_Skeleton.m_pJoints[joint].m_ParentIndex == -1)
+	{
+		m_Palette[joint] = m_Pose.m_pPoses[joint].localPose;
+	}
+	else
+	{
+		m_Palette[joint] = m_Palette[m_Skeleton.m_pJoints[joint].m_ParentIndex];
+		m_Palette[joint].Multiply(m_Pose.m_pPoses[joint].localPose);
+	}
+
+	// Multiply by inverse bind pose at the very end, after all joints are calculated.
+}
+
 void AnimComponent::Update( float fDelta )
 {
+	m_CurrAnimation.m_Time += fDelta;
 
+	// Frame rate from Maya is 24.0 FPS.
+	m_CurrAnimation.m_CurrFrame = int(24.0f * m_CurrAnimation.m_Time);
+
+	// Loop the animation.
+	if (m_CurrAnimation.m_CurrFrame >= m_CurrAnimation.m_NumFrames)
+	{
+		m_CurrAnimation.m_CurrFrame -= m_CurrAnimation.m_NumFrames;
+		m_CurrAnimation.m_Time -= float(m_CurrAnimation.m_NumFrames) / 24.0f;
+	}
+
+	// Animate!
+	for (short i = 0; i < m_Skeleton.m_iNumJoints; ++i)
+	{
+		KeyFrame* frame1 = m_CurrAnimation.m_pKeyFrames[i];
+		KeyFrame* frame2 = m_CurrAnimation.m_pKeyFrames[i]->m_Next;
+
+		while (frame2 != nullptr)
+		{
+			if (frame1->m_FrameNum <= m_CurrAnimation.m_CurrFrame
+				&& frame2->m_FrameNum >= m_CurrAnimation.m_CurrFrame)
+			{
+				CalculatePose(i, frame1, frame2);
+				break;
+			}
+
+			frame1 = frame2;
+			frame2 = frame2->m_Next;
+		}
+
+		if (frame2 == nullptr)
+		{
+			CalculatePose(i, frame1, m_CurrAnimation.m_pKeyFrames[i]);
+		}
+	}
+
+	// Multiply matrix palette by each inverse bind pose.
+	for (short i = 0; i < m_Skeleton.m_iNumJoints; ++i)
+	{
+		m_Palette[i].Multiply(m_Skeleton.m_pJoints[i].inv_bindPose);
+	}
 }
 
 void AnimComponent::StoreMatrixPalette( ID3DXEffect* pEffect )
 {
 	pEffect->SetMatrixArray("gPalette", static_cast<D3DXMATRIX*>(m_Palette->ToD3D()), 32);
 }
-
 
 void AnimComponent::Parse( const char* szFileName )
 {
