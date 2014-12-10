@@ -5,14 +5,6 @@
 #include "../engine/game/GameWorld.h"
 #include "../engine/game/InputManager.h"
 
-// Register WM_INPUT device.
-#ifndef HID_USAGE_PAGE_GENERIC
-#define HID_USAGE_PAGE_GENERIC         ((USHORT) 0x01)
-#endif
-#ifndef HID_USAGE_GENERIC_MOUSE
-#define HID_USAGE_GENERIC_MOUSE        ((USHORT) 0x02)
-#endif
-
 //-----------------------------------------------------------------------------
 // Name: MsgProc()
 // Desc: The window's message handler
@@ -49,6 +41,11 @@ LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 				int yPosRelative = raw->data.mouse.lLastY;
 				ITP485::InputManager::get().NotifyMousePosition(xPosRelative, yPosRelative);
 			}
+			else if (raw->header.dwType == RIM_TYPEKEYBOARD)
+			{
+				int key = raw->data.keyboard.MakeCode;
+				ITP485::InputManager::get().NotifyKeyboardInput(key);
+			}
 			break;
 		}
 	}
@@ -79,12 +76,19 @@ INT WINAPI wWinMain(HINSTANCE hInst, HINSTANCE, LPWSTR, INT)
 		NULL, NULL, wc.hInstance, NULL);
 
 	// Register WM_INPUT device.
-	RAWINPUTDEVICE Rid[1];
-	Rid[0].usUsagePage = HID_USAGE_PAGE_GENERIC;
-	Rid[0].usUsage = HID_USAGE_GENERIC_MOUSE;
+	RAWINPUTDEVICE Rid[2];
+	// Mouse
+	Rid[0].usUsagePage = 0x01;
+	Rid[0].usUsage = 0x02;
 	Rid[0].dwFlags = RIDEV_INPUTSINK;
 	Rid[0].hwndTarget = hWnd;
-	RegisterRawInputDevices(Rid, 1, sizeof(Rid[0]));
+	// Keyboard
+	Rid[1].usUsagePage = 0x01;
+	Rid[1].usUsage = 0x06;
+	Rid[1].dwFlags = RIDEV_INPUTSINK;
+	Rid[1].hwndTarget = hWnd;
+	// Registration function.
+	RegisterRawInputDevices(Rid, 2, sizeof(Rid[0]));
 
 	// Setup our GameWorld and GraphicsDevice singletons
 	ITP485::GraphicsDevice::get().Setup(hWnd);

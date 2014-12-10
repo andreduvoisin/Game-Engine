@@ -20,11 +20,18 @@ public:
 	// Processes all inputs for this frame.
 	void ProcessInput();
 
-	// Notify game that the mouse moved.
+	// Notify game of mouse input.
 	void NotifyMousePosition(int x, int y);
+
+	// Notify game of keyboard input.
+	void NotifyKeyboardInput(int key);
 
 private:
 	int mouseX, mouseY;
+	bool keyW : 1;
+	bool keyA : 1;
+	bool keyS : 1;
+	bool keyD : 1;
 };
 
 }
