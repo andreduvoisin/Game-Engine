@@ -5,6 +5,8 @@
 #include "MeshData.h"
 #include "../Components/MeshComponent.h"
 #include "../components/AnimComponent.h"
+#include "../game/PointLight.h"
+#include "../game/InputManager.h"
 #include <fstream>
 #include <iostream>
 
@@ -94,6 +96,12 @@ void GraphicsDevice::Render()
 	if (SUCCEEDED(m_pDevice->BeginScene()))
 	{
 		// Rendering of scene objects can happen here:
+
+		// Process mouse input.
+		ITP485::InputManager::get().ProcessInput();
+
+		// Calculate camera matrix.
+		m_CameraMtx.CreateLookAt(m_vCameraPosition, m_vCameraAt, m_vCameraUp);
 
 		// Set camera/projection matrices.
 		Matrix4 mViewProj(m_ProjectionMtx);

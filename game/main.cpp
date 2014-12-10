@@ -3,6 +3,15 @@
 #include <windows.h>
 #include "../engine/graphics/GraphicsDevice.h"
 #include "../engine/game/GameWorld.h"
+#include "../engine/game/InputManager.h"
+
+// Register WM_INPUT device.
+#ifndef HID_USAGE_PAGE_GENERIC
+#define HID_USAGE_PAGE_GENERIC         ((USHORT) 0x01)
+#endif
+#ifndef HID_USAGE_GENERIC_MOUSE
+#define HID_USAGE_GENERIC_MOUSE        ((USHORT) 0x02)
+#endif
 
 //-----------------------------------------------------------------------------
 // Name: MsgProc()
@@ -12,17 +21,36 @@ LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	switch (msg)
 	{
-	case WM_DESTROY:
-		PostQuitMessage(0);
-		return 0;
+		case WM_DESTROY:
+			PostQuitMessage(0);
+			return 0;
 
-	case WM_PAINT:
-		ValidateRect(hWnd, NULL);
-		return 0;
+		case WM_PAINT:
+			ValidateRect(hWnd, NULL);
+			return 0;
 
-	case WM_ACTIVATE:
-		ITP485::GameWorld::get().SetPaused(wParam == WA_INACTIVE);
-		return 0;
+		case WM_ACTIVATE:
+			ITP485::GameWorld::get().SetPaused(wParam == WA_INACTIVE);
+			return 0;
+
+		case WM_INPUT:
+		{
+			UINT dwSize = 40;
+			static BYTE lpb[40];
+
+			GetRawInputData((HRAWINPUT)lParam, RID_INPUT,
+				lpb, &dwSize, sizeof(RAWINPUTHEADER));
+
+			RAWINPUT* raw = (RAWINPUT*)lpb;
+
+			if (raw->header.dwType == RIM_TYPEMOUSE)
+			{
+				int xPosRelative = raw->data.mouse.lLastX;
+				int yPosRelative = raw->data.mouse.lLastY;
+				ITP485::InputManager::get().NotifyMousePosition(xPosRelative, yPosRelative);
+			}
+			break;
+		}
 	}
 
 	return DefWindowProc(hWnd, msg, wParam, lParam);
@@ -50,10 +78,19 @@ INT WINAPI wWinMain(HINSTANCE hInst, HINSTANCE, LPWSTR, INT)
 		WS_OVERLAPPEDWINDOW, 100, 100, 1024, 768,
 		NULL, NULL, wc.hInstance, NULL);
 
+	// Register WM_INPUT device.
+	RAWINPUTDEVICE Rid[1];
+	Rid[0].usUsagePage = HID_USAGE_PAGE_GENERIC;
+	Rid[0].usUsage = HID_USAGE_GENERIC_MOUSE;
+	Rid[0].dwFlags = RIDEV_INPUTSINK;
+	Rid[0].hwndTarget = hWnd;
+	RegisterRawInputDevices(Rid, 1, sizeof(Rid[0]));
+
 	// Setup our GameWorld and GraphicsDevice singletons
 	ITP485::GraphicsDevice::get().Setup(hWnd);
 	ITP485::GameWorld::get().Setup();
 	ITP485::GameWorld::get().LoadLevel("level.ini");
+	ITP485::InputManager::get().Setup();
 
 	// Show the window
 	ShowWindow(hWnd, SW_SHOWDEFAULT);
@@ -102,6 +139,7 @@ INT WINAPI wWinMain(HINSTANCE hInst, HINSTANCE, LPWSTR, INT)
 	// Cleanup the GameWorld and GraphicsDevice singletons
 	ITP485::GameWorld::get().Cleanup();
 	ITP485::GraphicsDevice::get().Cleanup();
+	ITP485::InputManager::get().Cleanup();
 
 	UnregisterClass(L"ITP485 Game", wc.hInstance);
 	return 0;

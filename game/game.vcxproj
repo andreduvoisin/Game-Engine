@@ -80,6 +80,7 @@
     <ClCompile Include="..\engine\core\slowmath.cpp" />
     <ClCompile Include="..\engine\game\GameObject.cpp" />
     <ClCompile Include="..\engine\game\GameWorld.cpp" />
+    <ClCompile Include="..\engine\game\InputManager.cpp" />
     <ClCompile Include="..\engine\game\PointLight.cpp" />
     <ClCompile Include="..\engine\graphics\EffectManager.cpp" />
     <ClCompile Include="..\engine\graphics\GraphicsDevice.cpp" />
@@ -99,6 +100,7 @@
     <ClInclude Include="..\engine\core\slowmath.h" />
     <ClInclude Include="..\engine\game\GameObject.h" />
     <ClInclude Include="..\engine\game\GameWorld.h" />
+    <ClInclude Include="..\engine\game\InputManager.h" />
     <ClInclude Include="..\engine\game\PointLight.h" />
     <ClInclude Include="..\engine\graphics\EffectManager.h" />
     <ClInclude Include="..\engine\graphics\GraphicsDevice.h" />

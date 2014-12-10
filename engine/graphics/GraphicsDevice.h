@@ -37,8 +37,10 @@ public:
 	// Returns m_ProjectionMtx by reference, so you can modify it.
 	Matrix4& GetProjectionMatrix() { return m_ProjectionMtx; }
 
-	// Returns m_vCameraPosition by reference, so you can modify it.
+	// Returns camera specs by reference, so you can modify them.
 	Vector3& GetCameraPosition() { return m_vCameraPosition; }
+	Vector3& GetCameraAt() { return m_vCameraAt; }
+	Vector3& GetCameraUp() { return m_vCameraUp; }
 
 	// Getter/setter for ambient light color.
 	D3DXVECTOR4& GetAmbientColor() { return m_AmbientColor; }
@@ -62,8 +64,10 @@ protected:
 	// Projection matrix
 	Matrix4 m_ProjectionMtx;
 
-	// Camera position
+	// Camera specs
 	Vector3 m_vCameraPosition;
+	Vector3 m_vCameraAt;
+	Vector3 m_vCameraUp;
 
 	// Ambient light color.
 	D3DXVECTOR4 m_AmbientColor;
