@@ -68,6 +68,7 @@ public:
 // To define your own pool to be used, it's recommended to typedef as such:
 // typedef PoolAllocator<256, 1024> ComponentPool;
 // Remember block_size must be divisible by 16.
+//
 // IMPORTANT! Because of the way templates work, and this is a Singleton,
 // if you have two different typedefs that have the same block_size and
 // same num_blocks, both will end up using the SAME pool.
@@ -221,7 +222,6 @@ void PoolAllocator<block_size, num_blocks>::Free(void* ptr)
 
 } // namespace ITP485
 
-// Don't mess with this!
 // Macro that defines operator new/deletes which use a specific pool.
 // Use this inside the definition of a class, when you want said class to have its
 // new/deletes place it into a pool.

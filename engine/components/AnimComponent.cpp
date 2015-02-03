@@ -139,7 +139,7 @@ void AnimComponent::Update( float fDelta )
 		while (frame2 != nullptr)
 		{
 			if (frame1->m_FrameNum <= m_CurrAnimation.m_CurrFrame
-				&& frame2->m_FrameNum >= m_CurrAnimation.m_CurrFrame)
+				&& frame2->m_FrameNum > m_CurrAnimation.m_CurrFrame)
 			{
 				CalculatePose(i, frame1, frame2);
 				break;
@@ -162,6 +162,7 @@ void AnimComponent::Update( float fDelta )
 	}
 }
 
+// Set the matrix palette.
 void AnimComponent::StoreMatrixPalette( ID3DXEffect* pEffect )
 {
 	pEffect->SetMatrixArray("gPalette", static_cast<D3DXMATRIX*>(m_Palette->ToD3D()), 32);
@@ -169,11 +170,11 @@ void AnimComponent::StoreMatrixPalette( ID3DXEffect* pEffect )
 
 void AnimComponent::Parse( const char* szFileName )
 {
-	// Parse the itpanim file
+	// Parse the itpanim file.
 	ticpp::Document doc(szFileName);
 	doc.LoadFile();
 
-	// This is some really ugly XML parsing code
+	// Basic XML parsing code.
 	ticpp::Iterator<ticpp::Element> child;
 	for(child = child.begin(doc.FirstChildElement()); child != child.end(); child++)
 	{
@@ -201,7 +202,6 @@ void AnimComponent::Parse( const char* szFileName )
 			ticpp::Iterator<ticpp::Element> joint;
 			for(joint = joint.begin(child.Get()); joint != joint.end(); joint++)
 			{
-				//float x, y, z, w;
 				float mat[4][4];
 
 				strValue = joint->GetAttribute("id");
@@ -218,17 +218,7 @@ void AnimComponent::Parse( const char* szFileName )
 				for(ele = ele.begin(joint.Get()); ele != ele.end(); ele++)
 				{
 					ele->GetValue(&strName);
-					/*if (strName == "pos")
-					{
-						sscanf_s(ele->GetText().c_str(), "%f,%f,%f", &x, &y, &z);
-						m_Skeleton.m_pJoints[index].m_vBindTrans.Set(x, y, z);
-					}
-					else if (strName == "quat")
-					{
-						sscanf_s(ele->GetText().c_str(), "%f,%f,%f,%f", &x, &y, &z, &w);
-						m_Skeleton.m_pJoints[index].m_qBindQuat.Set(x, y, z, w);
-					}
-					else */if (strName == "mat")
+					if (strName == "mat")
 					{
 						sscanf_s(ele->GetText().c_str(), "%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f",
 							&mat[0][0], &mat[0][1], &mat[0][2], &mat[0][3],
@@ -246,7 +236,6 @@ void AnimComponent::Parse( const char* szFileName )
 			ticpp::Iterator<ticpp::Element> anim;
 			for(anim = anim.begin(child.Get()); anim != anim.end(); anim++)
 			{
-				//float x, y, z, w;
 				float mat[4][4];
 
 				// Get Name and length
@@ -294,17 +283,7 @@ void AnimComponent::Parse( const char* szFileName )
 						for(ele = ele.begin(key.Get()); ele != ele.end(); ele++)
 						{
 							ele->GetValue(&strName);
-							/*if (strName == "pos")
-							{
-								sscanf_s(ele->GetText().c_str(), "%f,%f,%f", &x, &y, &z);
-								CurrKey->m_vTrans.Set(x, y, z);
-							}
-							else if (strName == "quat")
-							{
-								sscanf_s(ele->GetText().c_str(), "%f,%f,%f,%f", &x, &y, &z, &w);
-								CurrKey->m_qRot.Set(x, y, z, w);
-							}
-							else*/ if (strName == "mat")
+							if (strName == "mat")
 							{
 								sscanf_s(ele->GetText().c_str(), "%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f",
 									&mat[0][0], &mat[0][1], &mat[0][2], &mat[0][3],

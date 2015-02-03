@@ -159,7 +159,6 @@ private:
 	// The animation we're currently playing
 	// We'd ideally change this to a pointer and load several animations
 	// and be able to choose between them.
-	// But right now the engine doesn't support this!
 	Animation m_CurrAnimation;
 
 	// Matrix palette (array) for this anim component
